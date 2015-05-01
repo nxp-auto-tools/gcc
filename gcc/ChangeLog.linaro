@@ -1,3 +1,15 @@
+2015-05-01  Yvan Roux  <yvan.roux@linaro.org>
+
+	[Linaro Only] Add LINK_SPEC changes and configure-time option for
+	Cortex-A53 erratum 843419 workaround.
+
+	* configure.ac: Add --enable-fix-cortex-a53-843419 option.
+	* configure: Regenerate.
+	* config/aarch64/aarch64-elf-raw.h (CA53_ERR_843419_SPEC): Define.
+	(LINK_SPEC): Include CA53_ERR_843419_SPEC.
+	* config/aarch64/aarch64-linux.h (CA53_ERR_843419_SPEC): Define.
+	(LINK_SPEC): Include CA53_ERR_843419_SPEC.
+
 2015-04-16  Christophe Lyon  <christophe.lyon@linaro.org>
 
 	* LINARO-VERSION: Bump version.
