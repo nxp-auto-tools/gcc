@@ -1,5 +1,10 @@
 2015-05-01  Yvan Roux  <yvan.roux@linaro.org>
 
+	GCC Linaro 4.9-2015.04-1 snapshot.
+	* LINARO-VERSION: Update.
+
+2015-05-01  Yvan Roux  <yvan.roux@linaro.org>
+
 	[Linaro Only] Add LINK_SPEC changes and configure-time option for
 	Cortex-A53 erratum 843419 workaround.
 
