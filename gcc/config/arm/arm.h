@@ -304,6 +304,9 @@ extern void (*arm_lang_output_object_attributes_hook)(void);
 #define TARGET_BPABI false
 #endif
 
+#define ENDIAN_LANE_N(mode, n)  \
+  (BYTES_BIG_ENDIAN ? GET_MODE_NUNITS (mode) - 1 - n : n)
+
 /* Support for a compile-time default CPU, et cetera.  The rules are:
    --with-arch is ignored if -march or -mcpu are specified.
    --with-cpu is ignored if -march or -mcpu are specified, and is overridden

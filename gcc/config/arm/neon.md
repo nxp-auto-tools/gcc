@@ -4261,8 +4261,9 @@ if (BYTES_BIG_ENDIAN)
                     UNSPEC_VLD1_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
+  operands[3] = GEN_INT (lane);
   if (lane < 0 || lane >= max)
     error ("lane out of range");
   if (max == 1)
@@ -4281,8 +4282,9 @@ if (BYTES_BIG_ENDIAN)
                     UNSPEC_VLD1_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
+  operands[3] = GEN_INT (lane);
   int regno = REGNO (operands[0]);
   if (lane < 0 || lane >= max)
     error ("lane out of range");
@@ -4367,8 +4369,9 @@ if (BYTES_BIG_ENDIAN)
 	  UNSPEC_VST1_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
+  operands[2] = GEN_INT (lane);
   if (lane < 0 || lane >= max)
     error ("lane out of range");
   if (max == 1)
@@ -4387,7 +4390,7 @@ if (BYTES_BIG_ENDIAN)
 	  UNSPEC_VST1_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   if (lane < 0 || lane >= max)
@@ -4396,8 +4399,8 @@ if (BYTES_BIG_ENDIAN)
     {
       lane -= max / 2;
       regno += 2;
-      operands[2] = GEN_INT (lane);
     }
+  operands[2] = GEN_INT (lane);
   operands[1] = gen_rtx_REG (<V_HALF>mode, regno);
   if (max == 2)
     return "vst1.<V_sz_elem>\t{%P1}, %A0";
@@ -4457,7 +4460,7 @@ if (BYTES_BIG_ENDIAN)
                    UNSPEC_VLD2_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[0]);
   rtx ops[4];
@@ -4466,7 +4469,7 @@ if (BYTES_BIG_ENDIAN)
   ops[0] = gen_rtx_REG (DImode, regno);
   ops[1] = gen_rtx_REG (DImode, regno + 2);
   ops[2] = operands[1];
-  ops[3] = operands[3];
+  ops[3] = GEN_INT (lane);
   output_asm_insn ("vld2.<V_sz_elem>\t{%P0[%c3], %P1[%c3]}, %A2", ops);
   return "";
 }
@@ -4482,7 +4485,7 @@ if (BYTES_BIG_ENDIAN)
                    UNSPEC_VLD2_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[0]);
   rtx ops[4];
@@ -4572,7 +4575,7 @@ if (BYTES_BIG_ENDIAN)
 	  UNSPEC_VST2_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   rtx ops[4];
@@ -4581,7 +4584,7 @@ if (BYTES_BIG_ENDIAN)
   ops[0] = operands[0];
   ops[1] = gen_rtx_REG (DImode, regno);
   ops[2] = gen_rtx_REG (DImode, regno + 2);
-  ops[3] = operands[2];
+  ops[3] = GEN_INT (lane);
   output_asm_insn ("vst2.<V_sz_elem>\t{%P1[%c3], %P2[%c3]}, %A0", ops);
   return "";
 }
@@ -4597,7 +4600,7 @@ if (BYTES_BIG_ENDIAN)
            UNSPEC_VST2_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   rtx ops[4];
@@ -4716,7 +4719,7 @@ if (BYTES_BIG_ENDIAN)
                    UNSPEC_VLD3_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N (<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[0]);
   rtx ops[5];
@@ -4726,7 +4729,7 @@ if (BYTES_BIG_ENDIAN)
   ops[1] = gen_rtx_REG (DImode, regno + 2);
   ops[2] = gen_rtx_REG (DImode, regno + 4);
   ops[3] = operands[1];
-  ops[4] = operands[3];
+  ops[4] = GEN_INT (lane);
   output_asm_insn ("vld3.<V_sz_elem>\t{%P0[%c4], %P1[%c4], %P2[%c4]}, %3",
                    ops);
   return "";
@@ -4743,7 +4746,7 @@ if (BYTES_BIG_ENDIAN)
                    UNSPEC_VLD3_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[0]);
   rtx ops[5];
@@ -4888,7 +4891,7 @@ if (BYTES_BIG_ENDIAN)
            UNSPEC_VST3_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   rtx ops[5];
@@ -4898,7 +4901,7 @@ if (BYTES_BIG_ENDIAN)
   ops[1] = gen_rtx_REG (DImode, regno);
   ops[2] = gen_rtx_REG (DImode, regno + 2);
   ops[3] = gen_rtx_REG (DImode, regno + 4);
-  ops[4] = operands[2];
+  ops[4] = GEN_INT (lane);
   output_asm_insn ("vst3.<V_sz_elem>\t{%P1[%c4], %P2[%c4], %P3[%c4]}, %0",
                    ops);
   return "";
@@ -4915,7 +4918,7 @@ if (BYTES_BIG_ENDIAN)
            UNSPEC_VST3_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   rtx ops[5];
@@ -5038,7 +5041,7 @@ if (BYTES_BIG_ENDIAN)
                    UNSPEC_VLD4_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[0]);
   rtx ops[6];
@@ -5049,7 +5052,7 @@ if (BYTES_BIG_ENDIAN)
   ops[2] = gen_rtx_REG (DImode, regno + 4);
   ops[3] = gen_rtx_REG (DImode, regno + 6);
   ops[4] = operands[1];
-  ops[5] = operands[3];
+  ops[5] = GEN_INT (lane);
   output_asm_insn ("vld4.<V_sz_elem>\t{%P0[%c5], %P1[%c5], %P2[%c5], %P3[%c5]}, %A4",
                    ops);
   return "";
@@ -5066,7 +5069,7 @@ if (BYTES_BIG_ENDIAN)
                    UNSPEC_VLD4_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[3]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[3]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[0]);
   rtx ops[6];
@@ -5218,7 +5221,7 @@ if (BYTES_BIG_ENDIAN)
            UNSPEC_VST4_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   rtx ops[6];
@@ -5229,7 +5232,7 @@ if (BYTES_BIG_ENDIAN)
   ops[2] = gen_rtx_REG (DImode, regno + 2);
   ops[3] = gen_rtx_REG (DImode, regno + 4);
   ops[4] = gen_rtx_REG (DImode, regno + 6);
-  ops[5] = operands[2];
+  ops[5] = GEN_INT (lane);
   output_asm_insn ("vst4.<V_sz_elem>\t{%P1[%c5], %P2[%c5], %P3[%c5], %P4[%c5]}, %A0",
                    ops);
   return "";
@@ -5246,7 +5249,7 @@ if (BYTES_BIG_ENDIAN)
            UNSPEC_VST4_LANE))]
   "TARGET_NEON"
 {
-  HOST_WIDE_INT lane = INTVAL (operands[2]);
+  HOST_WIDE_INT lane = ENDIAN_LANE_N(<MODE>mode, INTVAL (operands[2]));
   HOST_WIDE_INT max = GET_MODE_NUNITS (<MODE>mode);
   int regno = REGNO (operands[1]);
   rtx ops[6];

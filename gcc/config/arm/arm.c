@@ -29800,4 +29800,24 @@ arm_sched_fusion_priority (rtx_insn *insn, int max_pri,
   *pri = tmp;
   return;
 }
+
+/* Bounds-check lanes.  Ensure OPERAND lies between LOW (inclusive) and
+   HIGH (exclusive).  */
+void
+arm_neon_lane_bounds (rtx operand, HOST_WIDE_INT low, HOST_WIDE_INT high,
+		      const_tree exp)
+{
+  HOST_WIDE_INT lane;
+  gcc_assert (CONST_INT_P (operand));
+  lane = INTVAL (operand);
+
+  if (lane < low || lane >= high)
+  {
+    if (exp)
+      error ("%Klane %ld out of range %ld - %ld", exp, lane, low, high - 1);
+    else
+      error ("lane %ld out of range %ld - %ld", lane, low, high - 1);
+  }
+}
+
 #include "gt-arm.h"

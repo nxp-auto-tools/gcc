@@ -344,6 +344,10 @@ extern void arm_cpu_builtins (struct cpp_reader *, int);
 
 extern bool arm_is_constant_pool_ref (rtx);
 
+void arm_neon_lane_bounds (rtx operand, HOST_WIDE_INT low, HOST_WIDE_INT high,
+			   const_tree exp);
+
+
 /* Flags used to identify the presence of processor capabilities.  */
 
 /* Bit values used to identify processor capabilities.  */
