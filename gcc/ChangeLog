@@ -1,3 +1,10 @@
+2015-06-24  Michael Collison  <michael.collison@linaro.org
+
+	2012-05-01  Ramana Radhakrishnan  <ramana.radhakrishnan@linaro.org>
+
+	* gcc/config/arm/arm.md (*arm_smin_cmp): New pattern.
+	(*arm_umin_cmp): Likewise.
+
 2015-06-24  Kaz Kojima  <kkojima@gcc.gnu.org>
 
 	PR target/66563
