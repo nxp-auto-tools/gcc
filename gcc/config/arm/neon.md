@@ -1174,6 +1174,25 @@
 
 ;; Widening operations
 
+(define_insn_and_split "widen_ssumv8hi3"
+  [(set (match_operand:V4SI 0 "s_register_operand" "")
+	(plus:V4SI (sign_extend:V4SI
+		    (match_operand:V8HI 1 "s_register_operand" ""))
+		   (match_operand:V4SI 2 "s_register_operand" "")))]
+  "TARGET_NEON"
+  "#"
+  "&& reload_completed"
+  [(const_int 0)]
+  {
+    rtx loreg = simplify_gen_subreg (V4HImode, operands[1], V8HImode, 0);
+    rtx hireg = simplify_gen_subreg (V4HImode, operands[1], V8HImode, GET_MODE_SIZE (V4HImode));
+
+    emit_insn (gen_widen_ssumv4hi3 (operands[0], loreg, operands[2]));
+    emit_insn (gen_widen_ssumv4hi3 (operands[0], hireg, operands[2]));
+    DONE;
+  }
+  [(set_attr "type" "neon_add_widen")])
+
 (define_insn "widen_ssum<mode>3"
   [(set (match_operand:<V_widen> 0 "s_register_operand" "=w")
 	(plus:<V_widen> (sign_extend:<V_widen>
@@ -1183,6 +1202,25 @@
   "vaddw.<V_s_elem>\t%q0, %q2, %P1"
   [(set_attr "type" "neon_add_widen")]
 )
+
+(define_insn_and_split "widen_usumv8hi3"
+  [(set (match_operand:V4SI 0 "s_register_operand" "")
+	(plus:V4SI (zero_extend:V4SI
+		    (match_operand:V8HI 1 "s_register_operand" ""))
+		   (match_operand:V4SI 2 "s_register_operand" "")))]
+  "TARGET_NEON"
+  "#"
+  "&& reload_completed"
+  [(const_int 0)]
+  {
+    rtx loreg = simplify_gen_subreg (V4HImode, operands[1], V8HImode, 0);
+    rtx hireg = simplify_gen_subreg (V4HImode, operands[1], V8HImode, GET_MODE_SIZE (V4HImode));
+
+    emit_insn (gen_widen_usumv4hi3 (operands[0], loreg, operands[2]));
+    emit_insn (gen_widen_usumv4hi3 (operands[0], hireg, operands[2]));
+    DONE;
+  }
+  [(set_attr "type" "neon_add_widen")])
 
 (define_insn "widen_usum<mode>3"
   [(set (match_operand:<V_widen> 0 "s_register_operand" "=w")

@@ -1,3 +1,8 @@
+2015-07-19  Michael Collison  <michael.collison@linaro.org>
+
+	* config/arm/neon.md: Added define_insn_and_split for
+	widen_ssumv8hi3 and widen_usumhi3 to improve vectorization
+
 2015-07-18  Trevor Saunders  <tbsaunde+gcc@tbsaunde.org>
 
 	* vmsdbgout.c (vmsdbgout_decl): Change name of prototyped
