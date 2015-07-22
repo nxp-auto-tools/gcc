@@ -1,3 +1,8 @@
+2015-07-22  Ryan S. Arnold  <ryan.arnold@linaro.org>
+
+	GCC Linaro 4.9-2015.05 release.
+	* LINARO-VERSION: Update.
+
 2015-05-01  Yvan Roux  <yvan.roux@linaro.org>
 
 	GCC Linaro 4.9-2015.04-1 snapshot.
