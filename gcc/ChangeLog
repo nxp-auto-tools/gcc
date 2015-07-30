@@ -1,3 +1,8 @@
+2015-07-22  Michael Collison  <michael.collison@linaro.org>
+
+	* config/arm/neon.md (widen_<us>sum<mode>): New patterns
+	where mode is VQI to improve mixed mode vectorization.
+
 2015-07-22  Uros Bizjak  <ubizjak@gmail.com>
 
 	PR target/66954

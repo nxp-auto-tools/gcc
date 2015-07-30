@@ -1174,6 +1174,26 @@
 
 ;; Widening operations
 
+(define_insn_and_split "widen_ssum<mode>3"
+  [(set (match_operand:<V_double_width> 0 "s_register_operand" "=&w")
+	(plus:<V_double_width> (sign_extend:<V_double_width>
+			  (match_operand:VQI 1 "s_register_operand" "w"))
+			 (match_operand:<V_double_width> 2 "s_register_operand" "0")))]
+  "TARGET_NEON"
+  "#"
+  "&& reload_completed"
+  [(const_int 0)]
+{
+    rtx loreg = simplify_gen_subreg (<V_HALF>mode, operands[1], <MODE>mode, 0);
+    rtx hireg = simplify_gen_subreg (<V_HALF>mode, operands[1], <MODE>mode, GET_MODE_SIZE (<V_HALF>mode));
+
+    emit_insn (gen_widen_ssum<V_half>3 (operands[0], loreg, operands[2]));
+    emit_insn (gen_widen_ssum<V_half>3 (operands[0], hireg, operands[2]));
+    DONE;
+  }
+  [(set_attr "type" "neon_add_widen")
+   (set_attr "length" "8")])
+
 (define_insn "widen_ssum<mode>3"
   [(set (match_operand:<V_widen> 0 "s_register_operand" "=w")
 	(plus:<V_widen> (sign_extend:<V_widen>
@@ -1183,6 +1203,26 @@
   "vaddw.<V_s_elem>\t%q0, %q2, %P1"
   [(set_attr "type" "neon_add_widen")]
 )
+
+(define_insn_and_split "widen_usum<mode>3"
+  [(set (match_operand:<V_double_width> 0 "s_register_operand" "=&w")
+	(plus:<V_double_width> (zero_extend:<V_double_width>
+			  (match_operand:VQI 1 "s_register_operand" "w"))
+			 (match_operand:<V_double_width> 2 "s_register_operand" "0")))]
+  "TARGET_NEON"
+  "#"
+  "&& reload_completed"
+  [(const_int 0)]
+{
+    rtx loreg = simplify_gen_subreg (<V_HALF>mode, operands[1], <MODE>mode, 0);
+    rtx hireg = simplify_gen_subreg (<V_HALF>mode, operands[1], <MODE>mode, GET_MODE_SIZE (<V_HALF>mode));
+
+    emit_insn (gen_widen_usum<V_half>3 (operands[0], loreg, operands[2]));
+    emit_insn (gen_widen_usum<V_half>3 (operands[0], hireg, operands[2]));
+    DONE;
+  }
+  [(set_attr "type" "neon_add_widen")
+   (set_attr "length" "8")])
 
 (define_insn "widen_usum<mode>3"
   [(set (match_operand:<V_widen> 0 "s_register_operand" "=w")
