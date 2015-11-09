@@ -1174,6 +1174,91 @@
 
 ;; Widening operations
 
+(define_expand "widen_ssum<mode>3"
+  [(set (match_operand:<V_double_width> 0 "s_register_operand" "")
+	(plus:<V_double_width> (sign_extend:<V_double_width> (match_operand:VQI 1 "s_register_operand" ""))
+			       (match_operand:<V_double_width> 2 "s_register_operand" "")))]
+  "TARGET_NEON"
+  {
+    int i;
+    int temp1, temp2;
+    rtx temp3;
+    int half_elem = <V_mode_nunits>/2;
+    rtvec v1 = rtvec_alloc (half_elem);
+    rtvec v2 = rtvec_alloc (half_elem);
+    machine_mode mode = GET_MODE (operands[1]);
+    rtx p1, p2;
+
+    if (BYTES_BIG_ENDIAN)
+    {
+      for (i = 0; i < half_elem; i++)
+	{
+	  temp1 = half_elem - 1 - i;
+	  temp2 = GET_MODE_NUNITS (mode) - 1 - temp1;	
+	  temp3 = GEN_INT (temp2);
+	  RTVEC_ELT(v1, i) = temp3;
+	}
+    }
+    else
+      {
+
+	for (i = 0; i < half_elem; i++)
+	  RTVEC_ELT (v1, i) = GEN_INT (i);
+      }
+
+    p1 = gen_rtx_PARALLEL (mode, v1);
+
+    if (BYTES_BIG_ENDIAN)
+      {
+      	for (i = 0; i < half_elem; i++)
+	  {
+	    temp1 = <V_mode_nunits> - 1 - i;
+	    temp2 = GET_MODE_NUNITS (mode) - 1 - temp1;
+	    temp3 = GEN_INT (temp2);
+	    RTVEC_ELT(v2, i) = temp3;
+	  }
+      }
+    else
+      {
+	for (i = half_elem; i < <V_mode_nunits>; i++)
+	  RTVEC_ELT (v2, i - half_elem) = GEN_INT (i);
+      }
+
+    p2 = gen_rtx_PARALLEL (mode, v2);
+
+    if (operands[0] != operands[2])
+      emit_move_insn (operands[0], operands[2]);
+
+    emit_insn (gen_vec_sel_widen_ssum_lo<mode><V_half>3 (operands[0], operands[1], p1, operands[0]));
+    emit_insn (gen_vec_sel_widen_ssum_hi<mode><V_half>3 (operands[0], operands[1], p2, operands[0]));
+    DONE;
+  }
+)
+
+(define_insn "vec_sel_widen_ssum_lo<VQI:mode><VW:mode>3"
+  [(set (match_operand:<VW:V_widen> 0 "s_register_operand" "=w")
+	(plus:<VW:V_widen> (sign_extend:<VW:V_widen> (vec_select:VW (match_operand:VQI 1 "s_register_operand" "%w")
+						   (match_operand:VQI 2 "vect_par_constant_low" "")))
+		        (match_operand:<VW:V_widen> 3 "s_register_operand" "0")))]
+  "TARGET_NEON"
+{
+  return BYTES_BIG_ENDIAN ?  "vaddw.<V_s_elem>\t%q0, %q3, %f1" :
+    "vaddw.<V_s_elem>\t%q0, %q3, %e1";
+}
+  [(set_attr "type" "neon_add_widen")])
+
+(define_insn "vec_sel_widen_ssum_hi<VQI:mode><VW:mode>3"
+  [(set (match_operand:<VW:V_widen> 0 "s_register_operand" "=w")
+	(plus:<VW:V_widen> (sign_extend:<VW:V_widen> (vec_select:VW (match_operand:VQI 1 "s_register_operand" "%w")
+						   (match_operand:VQI 2 "vect_par_constant_high" "")))
+		        (match_operand:<VW:V_widen> 3 "s_register_operand" "0")))]
+  "TARGET_NEON"
+{
+  return BYTES_BIG_ENDIAN ?  "vaddw.<V_s_elem>\t%q0, %q3, %e1" :
+    "vaddw.<V_s_elem>\t%q0, %q3, %f1";
+}
+  [(set_attr "type" "neon_add_widen")])
+
 (define_insn "widen_ssum<mode>3"
   [(set (match_operand:<V_widen> 0 "s_register_operand" "=w")
 	(plus:<V_widen> (sign_extend:<V_widen>
@@ -1183,6 +1268,90 @@
   "vaddw.<V_s_elem>\t%q0, %q2, %P1"
   [(set_attr "type" "neon_add_widen")]
 )
+
+(define_expand "widen_usum<mode>3"
+  [(set (match_operand:<V_double_width> 0 "s_register_operand" "")
+	(plus:<V_double_width> (zero_extend:<V_double_width> (match_operand:VQI 1 "s_register_operand" ""))
+			       (match_operand:<V_double_width> 2 "s_register_operand" "")))]
+  "TARGET_NEON"
+  {
+    int i;
+    int temp1, temp2;
+    rtx temp3;
+    int half_elem = <V_mode_nunits>/2;
+    rtvec v1 = rtvec_alloc (half_elem);
+    rtvec v2 = rtvec_alloc (half_elem);
+    machine_mode mode = GET_MODE (operands[1]);
+    rtx p1, p2;
+
+    if (BYTES_BIG_ENDIAN)
+    {
+      for (i = 0; i < half_elem; i++)
+	{
+	  temp1 = half_elem - 1 - i;
+	  temp2 = GET_MODE_NUNITS (mode) - 1 - temp1;
+	  temp3 = GEN_INT (temp2);
+	  RTVEC_ELT(v1, i) = temp3;
+	}
+    }
+    else
+    {
+	for (i = 0; i < half_elem; i++)
+      	RTVEC_ELT (v1, i) = GEN_INT (i);
+    }
+
+    p1 = gen_rtx_PARALLEL (mode, v1);
+
+   if (BYTES_BIG_ENDIAN)
+    {
+      	for (i = 0; i < half_elem; i++)
+	  {
+	    temp1 = <V_mode_nunits> - 1 - i;
+	    temp2 = GET_MODE_NUNITS (mode) - 1 - temp1;
+	    temp3 = GEN_INT (temp2);
+	    RTVEC_ELT(v2, i) = temp3;
+	  }
+    }
+    else
+    {
+      for (i = half_elem; i < <V_mode_nunits>; i++)
+	RTVEC_ELT (v2, i - half_elem) = GEN_INT (i);
+    }
+
+    p2 = gen_rtx_PARALLEL (mode, v2);
+
+    if (operands[0] != operands[2])
+      emit_move_insn (operands[0], operands[2]);
+
+    emit_insn (gen_vec_sel_widen_usum_lo<mode><V_half>3 (operands[0], operands[1], p1, operands[0]));
+    emit_insn (gen_vec_sel_widen_usum_hi<mode><V_half>3 (operands[0], operands[1], p2, operands[0]));
+    DONE;
+  }
+)
+
+(define_insn "vec_sel_widen_usum_lo<VQI:mode><VW:mode>3"
+  [(set (match_operand:<VW:V_widen> 0 "s_register_operand" "=w")
+	(plus:<VW:V_widen> (zero_extend:<VW:V_widen> (vec_select:VW (match_operand:VQI 1 "s_register_operand" "%w")
+						   (match_operand:VQI 2 "vect_par_constant_low" "")))
+		        (match_operand:<VW:V_widen> 3 "s_register_operand" "0")))]
+  "TARGET_NEON"
+{
+  return BYTES_BIG_ENDIAN ?  "vaddw.<V_u_elem>\t%q0, %q3, %f1" :
+    "vaddw.<V_u_elem>\t%q0, %q3, %e1";
+}
+  [(set_attr "type" "neon_add_widen")])
+
+(define_insn "vec_sel_widen_usum_hi<VQI:mode><VW:mode>3"
+  [(set (match_operand:<VW:V_widen> 0 "s_register_operand" "=w")
+	(plus:<VW:V_widen> (zero_extend:<VW:V_widen> (vec_select:VW (match_operand:VQI 1 "s_register_operand" "%w")
+						   (match_operand:VQI 2 "vect_par_constant_high" "")))
+		        (match_operand:<VW:V_widen> 3 "s_register_operand" "0")))]
+  "TARGET_NEON"
+{
+ return BYTES_BIG_ENDIAN ?  "vaddw.<V_u_elem>\t%q0, %q3, %e1" :
+    "vaddw.<V_u_elem>\t%q0, %q3, %f1";
+}
+  [(set_attr "type" "neon_add_widen")])
 
 (define_insn "widen_usum<mode>3"
   [(set (match_operand:<V_widen> 0 "s_register_operand" "=w")
@@ -5331,7 +5500,7 @@ if (BYTES_BIG_ENDIAN)
  [(set (match_operand:<V_unpack> 0 "register_operand" "=w")
        (mult:<V_unpack> (SE:<V_unpack> (vec_select:<V_HALF>
 			   (match_operand:VU 1 "register_operand" "w") 
-                           (match_operand:VU 2 "vect_par_constant_low" "")))
+					(match_operand:VU 2 "vect_par_constant_low" "")))
  		        (SE:<V_unpack> (vec_select:<V_HALF>
                            (match_operand:VU 3 "register_operand" "w") 
                            (match_dup 2)))))]
