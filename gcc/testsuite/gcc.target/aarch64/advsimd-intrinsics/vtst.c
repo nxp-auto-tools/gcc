@@ -40,10 +40,8 @@ VECT_VAR_DECL(expected_poly,uint,8,16) [] = { 0x0, 0xff, 0xff, 0xff,
 					      0xff, 0xff, 0xff, 0xff,
 					      0xff, 0xff, 0xff, 0xff };
 
-#ifndef INSN_NAME
 #define INSN_NAME vtst
 #define TEST_MSG "VTST/VTSTQ"
-#endif
 
 /* We can't use the standard ref_v_binary_op.c template because vtst
    has no 64 bits variant, and outputs are always of uint type.  */
