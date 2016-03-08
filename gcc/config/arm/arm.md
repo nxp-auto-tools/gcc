@@ -1065,7 +1065,7 @@
    (match_operand:SIDI 1 "register_operand")
    (match_operand:SIDI 2 "register_operand")
    (match_operand 3 "")]
-  "TARGET_ARM"
+  "TARGET_32BIT"
 {
   emit_insn (gen_sub<mode>3_compare1 (operands[0], operands[1], operands[2]));
 
@@ -1083,7 +1083,7 @@
    (match_operand:SIDI 1 "register_operand")
    (match_operand:SIDI 2 "register_operand")
    (match_operand 3 "")]
-  "TARGET_ARM"
+  "TARGET_32BIT"
 {
   emit_insn (gen_sub<mode>3_compare1 (operands[0], operands[1], operands[2]));
 
@@ -1103,9 +1103,9 @@
 	  (match_operand:DI 2 "register_operand" "r")))
    (set (match_operand:DI 0 "register_operand" "=r")
 	(minus:DI (match_dup 1) (match_dup 2)))]
-  "TARGET_ARM"
+  "TARGET_32BIT"
   "#"
-  "TARGET_ARM && reload_completed"
+  "TARGET_32BIT && reload_completed"
   [(parallel [(set (reg:CC CC_REGNUM)
 		   (compare:CC (match_dup 1) (match_dup 2)))
 	      (set (match_dup 0) (minus:SI (match_dup 1) (match_dup 2)))])
