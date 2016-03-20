@@ -125,6 +125,56 @@
    (set_attr "type" "multiple")]
 )
 
+(define_insn_and_split "thumb2_negdi2_compare"
+  [(set (reg:CC CC_REGNUM)
+	(compare:CC
+	  (const_int 0)
+	  (match_operand:DI 1 "register_operand" "0,?r")))
+   (set (match_operand:DI 0 "register_operand" "=r,&r")
+	(minus:DI (const_int 0) (match_dup 1)))]
+  "TARGET_THUMB2"
+  "#"
+  "&& reload_completed"
+  [(parallel [(set (reg:CC CC_REGNUM)
+		   (compare:CC (const_int 0) (match_dup 1)))
+	      (set (match_dup 0) (minus:SI (const_int 0) (match_dup 1)))])
+   (parallel [(set (reg:CC CC_REGNUM)
+		   (compare:CC (const_int 0) (match_dup 3)))
+	      (set (match_dup 2) (minus:SI (minus:SI (match_dup 3)
+                                          (ashift:SI (match_dup 3)
+                                                     (const_int 1)))
+                                (ltu:SI (reg:CC_C CC_REGNUM) (const_int 0))))])]
+  {
+    operands[2] = gen_highpart (SImode, operands[0]);
+    operands[0] = gen_lowpart (SImode, operands[0]);
+    operands[3] = gen_highpart (SImode, operands[1]);
+    operands[1] = gen_lowpart (SImode, operands[1]);
+  }
+  [(set_attr "conds" "set")
+   (set_attr "length" "8")
+   (set_attr "type" "multiple")]
+)
+
+(define_insn "*thumb2_subsi3_carryin_shift"
+  [(set (reg:CC CC_REGNUM)
+        (compare:CC (const_int 0)
+		    (match_operand:SI 1 "s_register_operand" "r")))
+   (set (match_operand:SI 0 "s_register_operand" "=r")
+	(minus:SI (minus:SI
+		   (match_dup 1)
+		   (match_operator:SI 2 "shift_operator"
+                    [(match_operand:SI 3 "s_register_operand" "r")
+                     (match_operand:SI 4 "reg_or_int_operand" "rM")]))
+                 (ltu:SI (reg:CC_C CC_REGNUM) (const_int 0))))]
+  "TARGET_THUMB2"
+  "sbcs%?\\t%0, %1, %3%S2"
+  [(set_attr "conds" "set")
+   (set_attr "shift" "3")
+   (set (attr "type") (if_then_else (match_operand 4 "const_int_operand" "")
+		      (const_string "alus_shift_imm")
+                     (const_string "alus_shift_reg")))]
+)
+
 ;; Thumb-2 does not have rsc, so use a clever trick with shifter operands.
 (define_insn_and_split "*thumb2_negdi2"
   [(set (match_operand:DI         0 "s_register_operand" "=&r,r")

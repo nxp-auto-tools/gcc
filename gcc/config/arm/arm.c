@@ -22906,6 +22906,8 @@ maybe_get_arm_condition_code (rtx comparison)
 	{
 	case LTU: return ARM_CS;
 	case GEU: return ARM_CC;
+	case NE: return ARM_CS;
+	case EQ: return ARM_CC;
 	default: return ARM_NV;
 	}
 
@@ -22929,6 +22931,15 @@ maybe_get_arm_condition_code (rtx comparison)
 	case GEU: return ARM_CS;
 	case LTU: return ARM_CC;
 	default: return ARM_NV;
+	}
+
+    case CC_Vmode:
+      switch (comp_code)
+	{
+	case NE: return ARM_VS;
+	case EQ: return ARM_VC;
+	default: return ARM_NV;
+
 	}
 
     case CCmode:
