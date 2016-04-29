@@ -2163,19 +2163,21 @@
 
 ; ??? Check split length for Thumb-2
 (define_insn_and_split "*arm_andsi3_insn"
-  [(set (match_operand:SI         0 "s_register_operand" "=r,l,r,r,r")
-	(and:SI (match_operand:SI 1 "s_register_operand" "%r,0,r,r,r")
-		(match_operand:SI 2 "reg_or_int_operand" "I,l,K,r,?n")))]
+  [(set (match_operand:SI         0 "s_register_operand" "=r,l,r,r,r,r")
+	(and:SI (match_operand:SI 1 "s_register_operand" "%r,0,r,r,r,r")
+		(match_operand:SI 2 "reg_or_int_operand" "I,l,K,r,L,?n")))]
   "TARGET_32BIT"
   "@
    and%?\\t%0, %1, %2
    and%?\\t%0, %1, %2
    bic%?\\t%0, %1, #%B2
    and%?\\t%0, %1, %2
+   and%?\\t%0, %1, #%n2
    #"
   "TARGET_32BIT
    && CONST_INT_P (operands[2])
    && !(const_ok_for_arm (INTVAL (operands[2]))
+	|| neg_const_ok_for_arm (INTVAL (operands[2]))
 	|| const_ok_for_arm (~INTVAL (operands[2])))"
   [(clobber (const_int 0))]
   "
@@ -2183,10 +2185,10 @@
 	               INTVAL (operands[2]), operands[0], operands[1], 0);
   DONE;
   "
-  [(set_attr "length" "4,4,4,4,16")
+  [(set_attr "length" "4,4,4,4,4,16")
    (set_attr "predicable" "yes")
-   (set_attr "predicable_short_it" "no,yes,no,no,no")
-   (set_attr "type" "logic_imm,logic_imm,logic_reg,logic_reg,logic_imm")]
+   (set_attr "predicable_short_it" "no,yes,no,no,no,no")
+   (set_attr "type" "logic_imm,logic_imm,logic_reg,logic_reg,logic_imm,logic_imm")]
 )
 
 (define_insn "*andsi3_compare0"
@@ -2979,19 +2981,21 @@
 )
 
 (define_insn_and_split "*iorsi3_insn"
-  [(set (match_operand:SI 0 "s_register_operand" "=r,l,r,r,r")
-	(ior:SI (match_operand:SI 1 "s_register_operand" "%r,0,r,r,r")
-		(match_operand:SI 2 "reg_or_int_operand" "I,l,K,r,?n")))]
+  [(set (match_operand:SI 0 "s_register_operand" "=r,l,r,r,r,r")
+	(ior:SI (match_operand:SI 1 "s_register_operand" "%r,0,r,r,r,r")
+		(match_operand:SI 2 "reg_or_int_operand" "I,l,K,r,L,?n")))]
   "TARGET_32BIT"
   "@
    orr%?\\t%0, %1, %2
    orr%?\\t%0, %1, %2
    orn%?\\t%0, %1, #%B2
    orr%?\\t%0, %1, %2
+   orr%?\\t%0, %1, #%n2
    #"
   "TARGET_32BIT
    && CONST_INT_P (operands[2])
    && !(const_ok_for_arm (INTVAL (operands[2]))
+	|| neg_const_ok_for_arm (INTVAL (operands[2]))
         || (TARGET_THUMB2 && const_ok_for_arm (~INTVAL (operands[2]))))"
   [(clobber (const_int 0))]
 {
@@ -2999,11 +3003,11 @@
                       INTVAL (operands[2]), operands[0], operands[1], 0);
   DONE;
 }
-  [(set_attr "length" "4,4,4,4,16")
-   (set_attr "arch" "32,t2,t2,32,32")
+  [(set_attr "length" "4,4,4,4,4,16")
+   (set_attr "arch" "32,t2,t2,32,32,32")
    (set_attr "predicable" "yes")
-   (set_attr "predicable_short_it" "no,yes,no,no,no")
-   (set_attr "type" "logic_imm,logic_reg,logic_imm,logic_reg,logic_reg")]
+   (set_attr "predicable_short_it" "no,yes,no,no,no,no")
+   (set_attr "type" "logic_imm,logic_reg,logic_imm,logic_reg,logic_imm,logic_reg")]
 )
 
 (define_peephole2
@@ -3154,28 +3158,30 @@
 )
 
 (define_insn_and_split "*arm_xorsi3"
-  [(set (match_operand:SI         0 "s_register_operand" "=r,l,r,r")
-	(xor:SI (match_operand:SI 1 "s_register_operand" "%r,0,r,r")
-		(match_operand:SI 2 "reg_or_int_operand" "I,l,r,?n")))]
+  [(set (match_operand:SI         0 "s_register_operand" "=r,l,r,r,r")
+	(xor:SI (match_operand:SI 1 "s_register_operand" "%r,0,r,r,r")
+		(match_operand:SI 2 "reg_or_int_operand" "I,l,r,L,?n")))]
   "TARGET_32BIT"
   "@
    eor%?\\t%0, %1, %2
    eor%?\\t%0, %1, %2
    eor%?\\t%0, %1, %2
+   eor%?\\t%0, %1, #%n2
    #"
   "TARGET_32BIT
    && CONST_INT_P (operands[2])
-   && !const_ok_for_arm (INTVAL (operands[2]))"
+   && !const_ok_for_arm (INTVAL (operands[2]))
+   && !neg_const_ok_for_arm (INTVAL (operands[2]))"
   [(clobber (const_int 0))]
 {
   arm_split_constant (XOR, SImode, curr_insn,
                       INTVAL (operands[2]), operands[0], operands[1], 0);
   DONE;
 }
-  [(set_attr "length" "4,4,4,16")
+  [(set_attr "length" "4,4,4,4,16")
    (set_attr "predicable" "yes")
-   (set_attr "predicable_short_it" "no,yes,no,no")
-   (set_attr "type"  "logic_imm,logic_reg,logic_reg,multiple")]
+   (set_attr "predicable_short_it" "no,yes,no,no,no")
+   (set_attr "type"  "logic_imm,logic_reg,logic_reg,logic_imm,multiple")]
 )
 
 (define_insn "*xorsi3_compare0"

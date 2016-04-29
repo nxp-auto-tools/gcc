@@ -59,6 +59,7 @@ extern bool arm_small_register_classes_for_mode_p (machine_mode);
 extern int arm_hard_regno_mode_ok (unsigned int, machine_mode);
 extern bool arm_modes_tieable_p (machine_mode, machine_mode);
 extern int const_ok_for_arm (HOST_WIDE_INT);
+extern int neg_const_ok_for_arm (HOST_WIDE_INT);
 extern int const_ok_for_op (HOST_WIDE_INT, enum rtx_code);
 extern int const_ok_for_dimode_op (HOST_WIDE_INT, enum rtx_code);
 extern int arm_split_constant (RTX_CODE, machine_mode, rtx,

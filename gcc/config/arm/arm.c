@@ -3888,6 +3888,28 @@ const_ok_for_arm (HOST_WIDE_INT i)
   return FALSE;
 }
 
+/* Return TRUE if int I is a valid negative immediate ARM constant.  */
+
+int
+neg_const_ok_for_arm (HOST_WIDE_INT i)
+{
+  if (i >= 0)
+    return FALSE;
+
+  if (TARGET_32BIT)
+    {
+      HOST_WIDE_INT neg = -i;
+
+      if (IN_RANGE (i, -0x8000, 0x7fff))
+	{
+	  if ((i & 0xffff) == (neg & 0xffff))
+	    return const_ok_for_arm (neg);
+	}
+    }
+
+  return FALSE;
+}
+
 /* Return true if I is a valid constant for the operation CODE.  */
 int
 const_ok_for_op (HOST_WIDE_INT i, enum rtx_code code)
