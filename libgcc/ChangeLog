@@ -1,3 +1,14 @@
+2016-07-25  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	PR target/67877
+	* libgcc/config.host: Use t-stack and t-statck-aarch64 for
+	aarch64*-*-linux.
+	* libgcc/config/aarch64/morestack-c.c: New file.
+	* libgcc/config/aarch64/morestack.S: Likewise.
+	* libgcc/config/aarch64/t-stack-aarch64: Likewise.
+	* libgcc/generic-morestack.c (__splitstack_find): Add aarch64-specific
+	code.
+
 2016-07-21  Aurelien Jarno <aurelien@aurel32.net>
 
 	PR target/59833

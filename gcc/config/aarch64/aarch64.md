@@ -130,6 +130,7 @@
     UNSPEC_VSTRUCTDUMMY
     UNSPEC_SP_SET
     UNSPEC_SP_TEST
+    UNSPEC_STACK_CHECK
     UNSPEC_RSQRT
     UNSPEC_RSQRTE
     UNSPEC_RSQRTS
@@ -144,6 +145,7 @@
     UNSPECV_SET_FPSR		; Represent assign of FPSR content.
     UNSPECV_BLOCKAGE		; Represent a blockage
     UNSPECV_PROBE_STACK_RANGE	; Represent stack range probing.
+    UNSPECV_SPLIT_STACK_RETURN  ; Represent a camouflaged return
   ]
 )
 
@@ -5394,3 +5396,33 @@
 
 ;; ldp/stp peephole patterns
 (include "aarch64-ldpstp.md")
+
+;; Handle -fsplit-stack
+(define_expand "split_stack_prologue"
+  [(const_int 0)]
+  ""
+{
+  aarch64_expand_split_stack_prologue ();
+  DONE;
+})
+
+;; A return instruction which the middle-end does not see.
+(define_insn "split_stack_return"
+  [(unspec_volatile [(const_int 0)] UNSPECV_SPLIT_STACK_RETURN)]
+  ""
+  "ret"
+  [(set_attr "type" "branch")])
+
+;; If there are operand 0 bytes available on the stack, jump to
+;; operand 1.
+(define_expand "split_stack_space_check"
+  [(set (match_dup 2) (compare:CC (match_dup 3) (match_dup 2)))
+   (set (pc) (if_then_else
+	      (geu (match_dup 4) (const_int 0))
+	      (label_ref (match_operand 1))
+	      (pc)))]
+  ""
+{
+  aarch64_split_stack_space_check (operands[0], operands[1]);
+  DONE;
+})

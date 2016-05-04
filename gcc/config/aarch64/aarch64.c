@@ -3227,6 +3227,34 @@ aarch64_expand_prologue (void)
 	  RTX_FRAME_RELATED_P (insn) = 1;
 	}
     }
+
+  if (flag_split_stack && offset)
+    {
+      /* Setup the argument pointer (x10) for -fsplit-stack code.  If
+	 __morestack was called, it will left the arg pointer to the
+	 old stack in x28.  Otherwise, the argument pointer is the top
+	 of current frame.  */
+      rtx x10 = gen_rtx_REG (Pmode, R10_REGNUM);
+      rtx x11 = gen_rtx_REG (Pmode, R11_REGNUM);
+      rtx x28 = gen_rtx_REG (Pmode, R28_REGNUM);
+      rtx x29 = gen_rtx_REG (Pmode, R29_REGNUM);
+      rtx not_more = gen_label_rtx ();
+      rtx cc_reg = gen_rtx_REG (CCmode, CC_REGNUM);
+      rtx jump;
+
+      emit_move_insn (x11, GEN_INT (hard_fp_offset));
+      emit_insn (gen_add3_insn (x10, x29, x11));
+      jump = gen_rtx_IF_THEN_ELSE (VOIDmode,
+				   gen_rtx_GEU (VOIDmode, cc_reg,
+						const0_rtx),
+				   gen_rtx_LABEL_REF (VOIDmode, not_more),
+				   pc_rtx);
+      jump = emit_jump_insn (gen_rtx_SET (pc_rtx, jump));
+      JUMP_LABEL (jump) = not_more;
+      LABEL_NUSES (not_more) += 1;
+      emit_move_insn (x10, x28);
+      emit_label (not_more);
+    }
 }
 
 /* Return TRUE if we can use a simple_return insn.
@@ -3302,6 +3330,7 @@ aarch64_expand_epilogue (bool for_sibcall)
 				       GEN_INT (0)));
       offset = offset - fp_offset;
     }
+
 
   if (offset > 0)
     {
@@ -9648,7 +9677,7 @@ aarch64_expand_builtin_va_start (tree valist, rtx nextarg ATTRIBUTE_UNUSED)
   /* Emit code to initialize STACK, which points to the next varargs stack
      argument.  CUM->AAPCS_STACK_SIZE gives the number of stack words used
      by named arguments.  STACK is 8-byte aligned.  */
-  t = make_tree (TREE_TYPE (stack), virtual_incoming_args_rtx);
+  t = make_tree (TREE_TYPE (stack), crtl->args.internal_arg_pointer);
   if (cum->aapcs_stack_size > 0)
     t = fold_build_pointer_plus_hwi (t, cum->aapcs_stack_size * UNITS_PER_WORD);
   t = build2 (MODIFY_EXPR, TREE_TYPE (stack), stack, t);
@@ -14010,6 +14039,196 @@ aarch64_optab_supported_p (int op, machine_mode mode1, machine_mode,
     }
 }
 
+/* -fsplit-stack support.  */
+
+/* A SYMBOL_REF for __morestack.  */
+static GTY(()) rtx morestack_ref;
+
+/* Emit -fsplit-stack prologue, which goes before the regular function
+   prologue.  */
+void
+aarch64_expand_split_stack_prologue (void)
+{
+  HOST_WIDE_INT frame_size, args_size;
+  rtx_code_label *ok_label = NULL;
+  rtx mem, ssvalue, compare, jump, insn, call_fusage;
+  rtx reg11, reg30, temp;
+  rtx new_cfa, cfi_ops = NULL;
+  /* Offset from thread pointer to __private_ss.  */
+  int psso = 0x10;
+  int ninsn;
+
+  gcc_assert (flag_split_stack && reload_completed);
+
+  /* It limits total maximum stack allocation on 2G so its value can be
+     materialized with two instruction at most (movn/movk).  It might be
+     used by the linker to add some extra space for split calling non split
+     stack functions.  */
+  frame_size = cfun->machine->frame.frame_size;
+  if (frame_size > ((HOST_WIDE_INT) 1 << 31))
+    {
+      sorry ("Stack frame larger than 2G is not supported for -fsplit-stack");
+      return;
+    }
+
+  if (morestack_ref == NULL_RTX)
+    {
+      morestack_ref = gen_rtx_SYMBOL_REF (Pmode, "__morestack");
+      SYMBOL_REF_FLAGS (morestack_ref) |= (SYMBOL_FLAG_LOCAL
+					   | SYMBOL_FLAG_FUNCTION);
+    }
+
+  /* Load __private_ss from TCB.  */
+  ssvalue = gen_rtx_REG (Pmode, R9_REGNUM);
+  emit_insn (gen_aarch64_load_tp_hard (ssvalue));
+  mem = gen_rtx_MEM (Pmode, plus_constant (Pmode, ssvalue, psso));
+  emit_move_insn (ssvalue, mem);
+
+  temp = gen_rtx_REG (Pmode, R10_REGNUM);
+
+  /* Always emit two insns to calculate the requested stack, so the linker
+     can edit them when adjusting size for calling non-split-stack code.  */
+  ninsn = aarch64_internal_mov_immediate (temp, GEN_INT (-frame_size), true,
+					  Pmode);
+  gcc_assert (ninsn == 1 || ninsn == 2);
+  if (ninsn == 1)
+    emit_insn (gen_nop ());
+  emit_insn (gen_add3_insn (temp, stack_pointer_rtx, temp));
+
+  compare = aarch64_gen_compare_reg (LT, temp, ssvalue);
+
+  /* Jump to __morestack call if current __private_ss is not suffice.  */
+  ok_label = gen_label_rtx ();
+  jump = gen_rtx_IF_THEN_ELSE (VOIDmode,
+			       gen_rtx_GEU (VOIDmode, compare, const0_rtx),
+			       gen_rtx_LABEL_REF (VOIDmode, ok_label),
+			       pc_rtx);
+  jump = emit_jump_insn (gen_rtx_SET (pc_rtx, jump));
+  JUMP_LABEL (jump) = ok_label;
+
+  /* Mark the jump as very likely to be taken.  */
+  add_int_reg_note (jump, REG_BR_PROB, REG_BR_PROB_BASE / 100 - 1);
+
+  call_fusage = NULL_RTX;
+
+  /* Call __morestack with a non-standard call procedure: x10 will hold
+     the requested stack pointer and x11 the required stack size to be
+     copied.  */
+  args_size = crtl->args.size >= 0 ? crtl->args.size : 0;
+  reg11 = gen_rtx_REG (DImode, R11_REGNUM);
+  emit_move_insn (reg11, GEN_INT (args_size));
+  use_reg (&call_fusage, reg11);
+
+  /* Set up a minimum frame pointer to call __morestack.  The SP is not
+     save on x29 prior so in __morestack x29 points to the called SP.  */
+  reg30 = gen_rtx_REG (Pmode, R30_REGNUM);
+  aarch64_pushwb_single_reg (Pmode, R30_REGNUM, 16);
+
+  insn = emit_call_insn (gen_call (gen_rtx_MEM (DImode, morestack_ref),
+				   const0_rtx, const0_rtx));
+  add_function_usage_to (insn, call_fusage);
+
+  cfi_ops = alloc_reg_note (REG_CFA_RESTORE, reg30, cfi_ops);
+  mem = plus_constant (Pmode, stack_pointer_rtx, 16);
+  cfi_ops = alloc_reg_note (REG_CFA_DEF_CFA, stack_pointer_rtx, cfi_ops);
+
+  mem = gen_rtx_POST_MODIFY (Pmode, stack_pointer_rtx, mem);
+  mem = gen_rtx_MEM (DImode, mem);
+  insn = emit_move_insn (reg30, mem);
+
+  new_cfa = stack_pointer_rtx;
+  new_cfa = plus_constant (Pmode, new_cfa, 16);
+  cfi_ops = alloc_reg_note (REG_CFA_DEF_CFA, new_cfa, cfi_ops);
+  REG_NOTES (insn) = cfi_ops;
+  RTX_FRAME_RELATED_P (insn) = 1;
+
+  emit_insn (gen_split_stack_return ());
+
+  emit_label (ok_label);
+  LABEL_NUSES (ok_label) = 1;
+}
+
+/* Implement TARGET_ASM_FILE_END.  */
+static void
+aarch64_file_end (void)
+{
+  file_end_indicate_exec_stack ();
+
+  if (flag_split_stack)
+    file_end_indicate_split_stack ();
+}
+
+/* Return the internal arg pointer used for function incoming arguments.  */
+static rtx
+aarch64_internal_arg_pointer (void)
+{
+  if (flag_split_stack)
+    {
+      if (cfun->machine->frame.split_stack_arg_pointer == NULL_RTX)
+	{
+	  rtx pat;
+
+	  cfun->machine->frame.split_stack_arg_pointer = gen_reg_rtx (Pmode);
+	  REG_POINTER (cfun->machine->frame.split_stack_arg_pointer) = 1;
+
+	  /* Put the pseudo initialization right after the note at the
+	     beginning of the function.  */
+	  pat = gen_rtx_SET (cfun->machine->frame.split_stack_arg_pointer,
+			     gen_rtx_REG (Pmode, R10_REGNUM));
+	  push_topmost_sequence ();
+	  emit_insn_after (pat, get_insns ());
+	  pop_topmost_sequence ();
+	}
+      return plus_constant (Pmode, cfun->machine->frame.split_stack_arg_pointer,
+			    FIRST_PARM_OFFSET (current_function_decl));
+    }
+  return virtual_incoming_args_rtx;
+}
+
+static void
+aarch64_live_on_entry (bitmap regs)
+{
+  if (flag_split_stack)
+    bitmap_set_bit (regs, R10_REGNUM);
+}
+
+/* Emit -fsplit-stack dynamic stack allocation space check.  */
+
+void
+aarch64_split_stack_space_check (rtx size, rtx label)
+{
+  rtx mem, ssvalue, compare, jump;
+  rtx requested = gen_reg_rtx (Pmode);
+  /* Offset from thread pointer to __private_ss.  */
+  int psso = 0x10;
+
+  /* Load __private_ss from TCB.  */
+  ssvalue = gen_rtx_REG (Pmode, R9_REGNUM);
+  emit_insn (gen_aarch64_load_tp_hard (ssvalue));
+  mem = gen_rtx_MEM (Pmode, plus_constant (Pmode, ssvalue, psso));
+  emit_move_insn (ssvalue, mem);
+
+  /* And compare it with frame pointer plus required stack.  */
+  if (CONST_INT_P (size))
+     emit_insn (gen_add3_insn (requested, stack_pointer_rtx,
+			       GEN_INT (-INTVAL (size))));
+  else
+    {
+      size = force_reg (Pmode, size);
+      emit_move_insn (requested, gen_rtx_MINUS (Pmode, stack_pointer_rtx,
+						size));
+    }
+
+  /* Jump to __morestack call if current __private_ss is not suffice.  */
+  compare = aarch64_gen_compare_reg (LT, requested, ssvalue);
+  jump = gen_rtx_IF_THEN_ELSE (VOIDmode,
+			       gen_rtx_GEU (VOIDmode, compare, const0_rtx),
+			       gen_rtx_LABEL_REF (VOIDmode, label),
+			       pc_rtx);
+  jump = emit_jump_insn (gen_rtx_SET (pc_rtx, jump));
+  JUMP_LABEL (jump) = label;
+}
+
 #undef TARGET_ADDRESS_COST
 #define TARGET_ADDRESS_COST aarch64_address_cost
 
@@ -14035,6 +14254,9 @@ aarch64_optab_supported_p (int op, machine_mode mode1, machine_mode,
 
 #undef TARGET_ASM_FILE_START
 #define TARGET_ASM_FILE_START aarch64_start_file
+
+#undef TARGET_ASM_FILE_END
+#define TARGET_ASM_FILE_END aarch64_file_end
 
 #undef TARGET_ASM_OUTPUT_MI_THUNK
 #define TARGET_ASM_OUTPUT_MI_THUNK aarch64_output_mi_thunk
@@ -14117,6 +14339,12 @@ aarch64_optab_supported_p (int op, machine_mode mode1, machine_mode,
 
 #undef TARGET_FRAME_POINTER_REQUIRED
 #define TARGET_FRAME_POINTER_REQUIRED aarch64_frame_pointer_required
+
+#undef TARGET_EXTRA_LIVE_ON_ENTRY
+#define TARGET_EXTRA_LIVE_ON_ENTRY aarch64_live_on_entry
+
+#undef TARGET_INTERNAL_ARG_POINTER
+#define TARGET_INTERNAL_ARG_POINTER aarch64_internal_arg_pointer
 
 #undef TARGET_GIMPLE_FOLD_BUILTIN
 #define TARGET_GIMPLE_FOLD_BUILTIN aarch64_gimple_fold_builtin

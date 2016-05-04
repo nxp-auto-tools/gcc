@@ -40,6 +40,7 @@ down (int i, ...)
       || va_arg (ap, int) != 9
       || va_arg (ap, int) != 10)
     abort ();
+  va_end (ap);
 
   if (i > 0)
     {

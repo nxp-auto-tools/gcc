@@ -570,6 +570,9 @@ struct GTY (()) aarch64_frame
 
   HOST_WIDE_INT frame_size;
 
+  /* Alternative internal arg pointer for -fsplit-stack.  */
+  rtx split_stack_arg_pointer;
+
   bool laid_out;
 };
 

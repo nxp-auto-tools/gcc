@@ -1,3 +1,36 @@
+2016-07-28  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	PR target/67877
+	* common/config/aarch64/aarch64-common.c
+	(aarch64_supports_split_stack): New function.
+	(TARGET_SUPPORTS_SPLIT_STACK): New macro.
+	* gcc/config/aarch64/aarch64-linux.h (TARGET_ASM_FILE_END): Remove
+	macro.
+	* gcc/config/aarch64/aarch64-protos.h: Add
+	aarch64_expand_split_stack_prologue and
+	aarch64_split_stack_space_check.
+	* gcc/config/aarch64/aarch64.c (aarch64_expand_prologue): Setup the
+	argument pointer (x10) for split-stack.
+	(aarch64_expand_builtin_va_start): Use internal argument pointer
+	instead of virtual_incoming_args_rtx.
+	(aarch64_expand_split_stack_prologue): New function.
+	(aarch64_file_end): Emit the split-stack note sections.
+	(aarch64_internal_arg_pointer): Likewise.
+	(aarch64_live_on_entry): Set the argument pointer for split-stack.
+	(aarch64_split_stack_space_check): Likewise.
+	(TARGET_ASM_FILE_END): New macro.
+	(TARGET_INTERNAL_ARG_POINTER): Likewise.
+	* gcc/config/aarch64/aarch64.h (aarch64_frame): Add
+	split_stack_arg_pointer to setup the argument pointer when using
+	split-stack.
+	* gcc/config/aarch64/aarch64.md (UNSPEC_STACK_CHECK): New unspec.
+	(UNSPECV_SPLIT_STACK_RETURN): Likewise.
+	(split_stack_prologue): New expand.
+	(split_stack_return): New insn.
+	(split_stack_space_check): New expand.
+	* gcc/testsuite/gcc.dg/split-3.c (down): Call va_end after va_start.
+	* gcc/testsuite/gcc.dg/split-6.c (down): Likewise.
+
 2016-07-28  Kristina Martsenko  <kristina.martsenko@arm.com>
 2016-07-28  Wilco Dijkstra  <wdijkstr@arm.com>
 
