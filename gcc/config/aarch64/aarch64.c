@@ -13184,8 +13184,7 @@ aarch_macro_fusion_pair_p (rtx_insn *prev, rtx_insn *curr)
   if (!aarch64_macro_fusion_p ())
     return false;
 
-  if (simple_sets_p
-      && (aarch64_tune_params.fusible_ops & AARCH64_FUSE_MOV_MOVK))
+  if (simple_sets_p && aarch64_fusion_enabled_p (AARCH64_FUSE_MOV_MOVK))
     {
       /* We are trying to match:
          prev (mov)  == (set (reg r0) (const_int imm16))
@@ -13209,8 +13208,7 @@ aarch_macro_fusion_pair_p (rtx_insn *prev, rtx_insn *curr)
         }
     }
 
-  if (simple_sets_p
-      && (aarch64_tune_params.fusible_ops & AARCH64_FUSE_ADRP_ADD))
+  if (simple_sets_p && aarch64_fusion_enabled_p (AARCH64_FUSE_ADRP_ADD))
     {
 
       /*  We're trying to match:
@@ -13235,8 +13233,7 @@ aarch_macro_fusion_pair_p (rtx_insn *prev, rtx_insn *curr)
         }
     }
 
-  if (simple_sets_p
-      && (aarch64_tune_params.fusible_ops & AARCH64_FUSE_MOVK_MOVK))
+  if (simple_sets_p && aarch64_fusion_enabled_p (AARCH64_FUSE_MOVK_MOVK))
     {
 
       /* We're trying to match:
@@ -13264,8 +13261,7 @@ aarch_macro_fusion_pair_p (rtx_insn *prev, rtx_insn *curr)
         return true;
 
     }
-  if (simple_sets_p
-      && (aarch64_tune_params.fusible_ops & AARCH64_FUSE_ADRP_LDR))
+  if (simple_sets_p && aarch64_fusion_enabled_p (AARCH64_FUSE_ADRP_LDR))
     {
       /* We're trying to match:
           prev (adrp) == (set (reg r0)
@@ -13296,11 +13292,11 @@ aarch_macro_fusion_pair_p (rtx_insn *prev, rtx_insn *curr)
         }
     }
 
-  if ((aarch64_tune_params.fusible_ops & AARCH64_FUSE_AES_AESMC)
+  if (aarch64_fusion_enabled_p (AARCH64_FUSE_AES_AESMC)
        && aarch_crypto_can_dual_issue (prev, curr))
     return true;
 
-  if ((aarch64_tune_params.fusible_ops & AARCH64_FUSE_CMP_BRANCH)
+  if (aarch64_fusion_enabled_p (AARCH64_FUSE_CMP_BRANCH)
       && any_condjump_p (curr))
     {
       enum attr_type prev_type = get_attr_type (prev);
