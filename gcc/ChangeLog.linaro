@@ -1,3 +1,8 @@
+2017-01-30  Yvan Roux  <yvan.roux@linaro.org>
+
+	GCC Linaro 4.9-2017.01 release.
+	* LINARO-VERSION: Update.
+
 2017-01-25  Yvan Roux  <yvan.roux@linaro.org>
 
 	GCC Linaro 4.9-2017.01-rc1 release candidate.
