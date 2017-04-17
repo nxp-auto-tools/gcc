@@ -20,6 +20,7 @@ Maintainers
 
 			Global Reviewers
 
+TCWG Buildslave					<tcwg-buildslave@linaro.org>
 Richard Earnshaw				<richard.earnshaw@arm.com>
 Richard Biener					<rguenther@suse.de>
 Richard Henderson				<rth@redhat.com>
