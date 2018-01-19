@@ -68,6 +68,9 @@ extern double __strtod (const char *, char **);
 extern long double __strtold (const char *, char **);
 #define gfc_strtold __strtold
 #else
+double strtod(const char *nptr, char **endptr);
+float strtof(const char *nptr, char **endptr);
+long double strtold(const char *nptr, char **endptr);
 #define gfc_strtof strtof
 #define gfc_strtod strtod
 #define gfc_strtold strtold
