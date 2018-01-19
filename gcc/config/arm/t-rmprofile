@@ -43,8 +43,8 @@ MULTILIB_REUSE       =
 MULTILIB_OPTIONS       += mthumb
 MULTILIB_DIRNAMES      += thumb
 
-MULTILIB_OPTIONS       += march=armv6s-m/march=armv7-m/march=armv7e-m/march=armv7/march=armv8-m.base/march=armv8-m.main
-MULTILIB_DIRNAMES      += v6-m v7-m v7e-m v7-ar v8-m.base v8-m.main
+MULTILIB_OPTIONS       += march=armv6s-m/march=armv7-m/march=armv7e-m/march=armv7/march=armv8-m.base/march=armv8-m.main/march=armv8-r
+MULTILIB_DIRNAMES      += v6-m v7-m v7e-m v7-ar v8-m.base v8-m.main v8-r
 
 MULTILIB_OPTIONS       += mfpu=vfpv3-d16/mfpu=fpv4-sp-d16/mfpu=fpv5-sp-d16/mfpu=fpv5-d16
 MULTILIB_DIRNAMES      += fpv3 fpv4-sp fpv5-sp fpv5
@@ -89,6 +89,18 @@ MULTILIB_REQUIRED      += mthumb/march=armv7
 MULTILIB_REQUIRED      += mthumb/march=armv7/mfpu=vfpv3-d16/mfloat-abi=softfp
 MULTILIB_REQUIRED      += mthumb/march=armv7/mfpu=vfpv3-d16/mfloat-abi=hard
 
+# ARMv8-R
+MULTILIB_REQUIRED      += march=armv8-r
+MULTILIB_REQUIRED      += march=armv8-r/mfpu=vfpv5-d16/mfloat-abi=softfp
+MULTILIB_REQUIRED      += march=armv8-r/mfpu=vfpv5-d16/mfloat-abi=hard
+MULTILIB_REQUIRED      += march=armv8-r/mfpu=fpv5-sp-d16/mfloat-abi=softfp
+MULTILIB_REQUIRED      += march=armv8-r/mfpu=fpv5-sp-d16/mfloat-abi=hard
+MULTILIB_REQUIRED      += mthumb/march=armv8-r
+MULTILIB_REQUIRED      += mthumb/march=armv8-r/mfpu=vfpv5-d16/mfloat-abi=softfp
+MULTILIB_REQUIRED      += mthumb/march=armv8-r/mfpu=vfpv5-d16/mfloat-abi=hard
+MULTILIB_REQUIRED      += mthumb/march=armv8-r/mfpu=fpv5-sp-d16/mfloat-abi=softfp
+MULTILIB_REQUIRED      += mthumb/march=armv8-r/mfpu=fpv5-sp-d16/mfloat-abi=hard
+
 
 # Matches
 
@@ -109,6 +121,7 @@ MULTILIB_MATCHES       += march?armv7=mcpu?cortex-r4f
 MULTILIB_MATCHES       += march?armv7=mcpu?cortex-r5
 MULTILIB_MATCHES       += march?armv7=mcpu?cortex-r7
 MULTILIB_MATCHES       += march?armv7=mcpu?cortex-r8
+MULTILIB_MATCHES       += march?armv8-r=mcpu?cortex-r52
 MULTILIB_MATCHES       += march?armv7=mcpu?marvell-pj4
 MULTILIB_MATCHES       += march?armv7=mcpu?generic-armv7-a
 MULTILIB_MATCHES       += march?armv7=mcpu?cortex-a8
