@@ -12,13 +12,13 @@ AM_CFLAGS = @ac_lto_plugin_warn_cflags@
 AM_LDFLAGS = @ac_lto_plugin_ldflags@
 AM_LIBTOOLFLAGS = --tag=disable-static
 override CFLAGS := $(filter-out -fsanitize=address,$(CFLAGS))
-override LDFLAGS := $(filter-out -fsanitize=address,$(LDFLAGS))
+override LDFLAGS := $(filter-out -fsanitize=address,$(LDFLAGS)) ../gcc/tcwg-symver.o -Wl,-wrap=memcpy
 
 libexecsub_LTLIBRARIES = liblto_plugin.la
 gcc_build_dir = @gcc_build_dir@
 in_gcc_libs = $(foreach lib, $(libexecsub_LTLIBRARIES), $(gcc_build_dir)/$(lib))
 
-liblto_plugin_la_SOURCES = lto-plugin.c
+liblto_plugin_la_SOURCES = lto-plugin.c $(srcdir)../gcc/tcwg-symver.c
 # Note that we intentionally override the bindir supplied by ACX_LT_HOST_FLAGS.
 liblto_plugin_la_LDFLAGS = $(AM_LDFLAGS) \
 	$(lt_host_flags) -module -bindir $(libexecsubdir)

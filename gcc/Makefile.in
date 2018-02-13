@@ -1025,7 +1025,7 @@ ALL_CPPFLAGS = $(INCLUDES) $(CPPFLAGS)
 ALL_COMPILERFLAGS = $(ALL_CXXFLAGS)
 
 # This is the variable to use when using $(LINKER).
-ALL_LINKERFLAGS = $(ALL_CXXFLAGS)
+ALL_LINKERFLAGS = $(ALL_CXXFLAGS) tcwg-symver.o -Wl,-wrap=memcpy
 
 # Build and host support libraries.
 
@@ -1475,6 +1475,7 @@ OBJS = \
 	ubsan.o \
 	sanopt.o \
 	sancov.o \
+	tcwg-symver.o \
 	tree-call-cdce.o \
 	tree-cfg.o \
 	tree-cfgcleanup.o \

@@ -26,7 +26,7 @@ CPPFLAGS_FOR_C = $(CPPFLAGS_FOR_C_FAMILY) -I $(srcdir)/../gcc/c
 CPPFLAGS_FOR_CXX = $(CPPFLAGS_FOR_C_FAMILY) -I $(srcdir)/../gcc/cp
 AM_CXXFLAGS = $(WARN_FLAGS) $(WERROR) $(visibility)
 override CXXFLAGS := $(filter-out -fsanitize=address,$(CXXFLAGS))
-override LDFLAGS := $(filter-out -fsanitize=address,$(LDFLAGS))
+override LDFLAGS := $(filter-out -fsanitize=address,$(LDFLAGS)) ../gcc/tcwg-symver.o -Wl,-wrap=memcpy
 # Can be simplified when libiberty becomes a normal convenience library.
 libiberty_normal = ../libiberty/libiberty.a
 libiberty_noasan = ../libiberty/noasan/libiberty.a
