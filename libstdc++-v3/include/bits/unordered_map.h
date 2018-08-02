@@ -585,11 +585,12 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
       insert(value_type&& __x)
       { return _M_h.insert(std::move(__x)); }
 
-      template<typename _Pair>
-	__enable_if_t<is_constructible<value_type, _Pair&&>::value,
-		      pair<iterator, bool>>
+      template<typename _Pair, typename = typename
+	       std::enable_if<std::is_constructible<value_type,
+						    _Pair&&>::value>::type>
+	std::pair<iterator, bool>
 	insert(_Pair&& __x)
-        { return _M_h.emplace(std::forward<_Pair>(__x)); }
+        { return _M_h.insert(std::forward<_Pair>(__x)); }
       //@}
 
       //@{
@@ -624,10 +625,12 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
       insert(const_iterator __hint, value_type&& __x)
       { return _M_h.insert(__hint, std::move(__x)); }
 
-      template<typename _Pair>
-	__enable_if_t<is_constructible<value_type, _Pair&&>::value, iterator>
+      template<typename _Pair, typename = typename
+	       std::enable_if<std::is_constructible<value_type,
+						    _Pair&&>::value>::type>
+	iterator
 	insert(const_iterator __hint, _Pair&& __x)
-	{ return _M_h.emplace_hint(__hint, std::forward<_Pair>(__x)); }
+	{ return _M_h.insert(__hint, std::forward<_Pair>(__x)); }
       //@}
 
       /**
@@ -1557,10 +1560,12 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
       insert(value_type&& __x)
       { return _M_h.insert(std::move(__x)); }
 
-      template<typename _Pair>
-	__enable_if_t<is_constructible<value_type, _Pair&&>::value, iterator>
+      template<typename _Pair, typename = typename
+	       std::enable_if<std::is_constructible<value_type,
+						    _Pair&&>::value>::type>
+	iterator
 	insert(_Pair&& __x)
-        { return _M_h.emplace(std::forward<_Pair>(__x)); }
+        { return _M_h.insert(std::forward<_Pair>(__x)); }
       //@}
 
       //@{
@@ -1593,10 +1598,12 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
       insert(const_iterator __hint, value_type&& __x)
       { return _M_h.insert(__hint, std::move(__x)); }
 
-      template<typename _Pair>
-	__enable_if_t<is_constructible<value_type, _Pair&&>::value, iterator>
+      template<typename _Pair, typename = typename
+	       std::enable_if<std::is_constructible<value_type,
+						    _Pair&&>::value>::type>
+	iterator
 	insert(const_iterator __hint, _Pair&& __x)
-        { return _M_h.emplace_hint(__hint, std::forward<_Pair>(__x)); }
+        { return _M_h.insert(__hint, std::forward<_Pair>(__x)); }
       //@}
 
       /**

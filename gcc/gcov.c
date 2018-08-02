@@ -536,7 +536,6 @@ static int process_args (int, char **);
 static void print_usage (int) ATTRIBUTE_NORETURN;
 static void print_version (void) ATTRIBUTE_NORETURN;
 static void process_file (const char *);
-static void process_all_functions (void);
 static void generate_results (const char *);
 static void create_file_names (const char *);
 static char *canonicalize_name (const char *);
@@ -792,7 +791,6 @@ main (int argc, char **argv)
 
       if (flag_intermediate_format || argno == argc - 1)
 	{
-	  process_all_functions ();
 	  generate_results (argv[argno]);
 	  release_structures ();
 	}
@@ -1068,8 +1066,7 @@ output_intermediate_file (FILE *gcov_file, source_info *src)
 	}
 
       /* Follow with lines associated with the source file.  */
-      if (line_num < src->lines.size ())
-	output_intermediate_line (gcov_file, &src->lines[line_num], line_num);
+      output_intermediate_line (gcov_file, &src->lines[line_num], line_num);
     }
 }
 
@@ -1135,14 +1132,11 @@ process_file (const char *file_name)
 {
   create_file_names (file_name);
   read_graph_file ();
+  if (functions.empty ())
+    return;
+
   read_count_file ();
-}
 
-/* Process all functions in all files.  */
-
-static void
-process_all_functions (void)
-{
   hash_map<function_start_pair_hash, function_info *> fn_map;
 
   /* Identify group functions.  */
@@ -1218,6 +1212,7 @@ process_all_functions (void)
 	     and end_line information of the function.  */
 	  if (fn->is_group)
 	    fn->lines.resize (fn->end_line - fn->start_line + 1);
+
 
 	  solve_flow_graph (fn);
 	  if (fn->has_catch)

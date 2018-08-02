@@ -45,25 +45,6 @@ test02()
   compare_paths( p.lexically_relative(p), "." );
   compare_paths( p.lexically_relative("a/../a/b/../b/c/../c/."), "../../b/c" );
   compare_paths( p.lexically_relative("../../../"), "" );
-
-  compare_paths( path("a/./.").lexically_relative("a"), "./." );
-}
-
-void
-test03()
-{
-  // LWG 3096
-  compare_paths( path("/dir").lexically_relative("/dir"), "." );
-  compare_paths( path("/dir").lexically_relative("/dir/"), "." );
-  compare_paths( path("/dir").lexically_relative("/dir/."), "." );
-
-  compare_paths( path("/dir/").lexically_relative("/dir"), "." );
-  compare_paths( path("/dir/").lexically_relative("/dir/"), "." );
-  compare_paths( path("/dir/").lexically_relative("/dir/."), "." );
-
-  compare_paths( path("/dir/.").lexically_relative("/dir"), "." );
-  compare_paths( path("/dir/.").lexically_relative("/dir/"), "." );
-  compare_paths( path("/dir/.").lexically_relative("/dir/."), "." );
 }
 
 int
@@ -71,5 +52,4 @@ main()
 {
   test01();
   test02();
-  test03();
 }

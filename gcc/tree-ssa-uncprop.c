@@ -268,24 +268,21 @@ associate_equivalences_with_edges (void)
    so with each value we have a list of SSA_NAMEs that have the
    same value.  */
 
-/* Traits for the hash_map to record the value to SSA name equivalences
-   mapping.  */
-struct ssa_equip_hash_traits : default_hash_traits <tree>
-{
-  static inline hashval_t hash (value_type value)
-    { return iterative_hash_expr (value, 0); }
-  static inline bool equal (value_type existing, value_type candidate)
-    { return operand_equal_p (existing, candidate, 0); }
-};
 
-typedef hash_map<tree, auto_vec<tree>,
-		 simple_hashmap_traits <ssa_equip_hash_traits,
-					auto_vec <tree> > > val_ssa_equiv_t;
+/* Main structure for recording equivalences into our hash table.  */
+struct equiv_hash_elt
+{
+  /* The value/key of this entry.  */
+  tree value;
+
+  /* List of SSA_NAMEs which have the same value/key.  */
+  vec<tree> equivalences;
+};
 
 /* Global hash table implementing a mapping from invariant values
    to a list of SSA_NAMEs which have the same value.  We might be
    able to reuse tree-vn for this code.  */
-val_ssa_equiv_t *val_ssa_equiv;
+static hash_map<tree, auto_vec<tree> > *val_ssa_equiv;
 
 static void uncprop_into_successor_phis (basic_block);
 
@@ -479,7 +476,7 @@ pass_uncprop::execute (function *fun)
   associate_equivalences_with_edges ();
 
   /* Create our global data structures.  */
-  val_ssa_equiv = new val_ssa_equiv_t (1024);
+  val_ssa_equiv = new hash_map<tree, auto_vec<tree> > (1024);
 
   /* We're going to do a dominator walk, so ensure that we have
      dominance information.  */

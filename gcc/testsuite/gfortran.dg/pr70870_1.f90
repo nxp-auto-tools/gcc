@@ -1,5 +1,4 @@
 ! { dg-do compile }
-! { dg-options "-std=gnu" }
 ! PR fortran/70870
 ! Contributed by Vittorio Zecca <zeccav at gmail dot com >
       type t

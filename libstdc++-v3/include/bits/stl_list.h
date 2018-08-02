@@ -384,8 +384,7 @@ _GLIBCXX_BEGIN_NAMESPACE_CXX11
       {
 	__detail::_List_node_header _M_node;
 
-	_List_impl() _GLIBCXX_NOEXCEPT_IF(
-	    is_nothrow_default_constructible<_Node_alloc_type>::value)
+	_List_impl() _GLIBCXX_NOEXCEPT_IF( noexcept(_Node_alloc_type()) )
 	: _Node_alloc_type()
 	{ }
 

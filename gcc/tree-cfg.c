@@ -7287,14 +7287,11 @@ move_block_to_fn (struct function *dest_cfun, basic_block bb,
 }
 
 /* Examine the statements in BB (which is in SRC_CFUN); find and return
-   the outermost EH region.  Use REGION as the incoming base EH region.
-   If there is no single outermost region, return NULL and set *ALL to
-   true.  */
+   the outermost EH region.  Use REGION as the incoming base EH region.  */
 
 static eh_region
 find_outermost_region_in_block (struct function *src_cfun,
-				basic_block bb, eh_region region,
-				bool *all)
+				basic_block bb, eh_region region)
 {
   gimple_stmt_iterator si;
 
@@ -7313,11 +7310,7 @@ find_outermost_region_in_block (struct function *src_cfun,
 	  else if (stmt_region != region)
 	    {
 	      region = eh_region_outermost (src_cfun, stmt_region, region);
-	      if (region == NULL)
-		{
-		  *all = true;
-		  return NULL;
-		}
+	      gcc_assert (region != NULL);
 	    }
 	}
     }
@@ -7652,17 +7645,12 @@ move_sese_region_to_fn (struct function *dest_cfun, basic_block entry_bb,
   if (saved_cfun->eh)
     {
       eh_region region = NULL;
-      bool all = false;
 
       FOR_EACH_VEC_ELT (bbs, i, bb)
-	{
-	  region = find_outermost_region_in_block (saved_cfun, bb, region, &all);
-	  if (all)
-	    break;
-	}
+	region = find_outermost_region_in_block (saved_cfun, bb, region);
 
       init_eh_for_function ();
-      if (region != NULL || all)
+      if (region != NULL)
 	{
 	  new_label_map = htab_create (17, tree_map_hash, tree_map_eq, free);
 	  eh_map = duplicate_eh_regions (saved_cfun, region, 0,
@@ -9309,16 +9297,20 @@ generate_range_test (basic_block bb, tree index, tree low, tree high,
   tree type = TREE_TYPE (index);
   tree utype = unsigned_type_for (type);
 
-  low = fold_convert (utype, low);
-  high = fold_convert (utype, high);
+  low = fold_convert (type, low);
+  high = fold_convert (type, high);
 
-  gimple_seq seq = NULL;
-  index = gimple_convert (&seq, utype, index);
-  *lhs = gimple_build (&seq, MINUS_EXPR, utype, index, low);
-  *rhs = const_binop (MINUS_EXPR, utype, high, low);
+  tree tmp = make_ssa_name (type);
+  gassign *sub1
+    = gimple_build_assign (tmp, MINUS_EXPR, index, low);
 
+  *lhs = make_ssa_name (utype);
+  gassign *a = gimple_build_assign (*lhs, NOP_EXPR, tmp);
+
+  *rhs = fold_build2 (MINUS_EXPR, utype, high, low);
   gimple_stmt_iterator gsi = gsi_last_bb (bb);
-  gsi_insert_seq_before (&gsi, seq, GSI_SAME_STMT);
+  gsi_insert_before (&gsi, sub1, GSI_SAME_STMT);
+  gsi_insert_before (&gsi, a, GSI_SAME_STMT);
 }
 
 /* Emit return warnings.  */

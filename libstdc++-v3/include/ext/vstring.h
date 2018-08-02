@@ -2962,6 +2962,6 @@ _GLIBCXX_END_NAMESPACE_VERSION
 
 #endif // C++11
 
-#include <ext/vstring.tcc>
+#include "vstring.tcc" 
 
 #endif /* _VSTRING_H */

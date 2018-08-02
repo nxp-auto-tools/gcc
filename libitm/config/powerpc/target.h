@@ -81,20 +81,7 @@ cpu_relax (void)
 static inline bool
 htm_available (void)
 {
-#ifdef __BUILTIN_CPU_SUPPORTS__
-  if (__builtin_cpu_supports ("htm-no-suspend")
-      || __builtin_cpu_supports ("htm"))
-    return true;
-#else
-  unsigned long htm_flags = PPC_FEATURE2_HAS_HTM
-#ifdef PPC_FEATURE2_HTM_NO_SUSPEND
-			    | PPC_FEATURE2_HTM_NO_SUSPEND
-#endif
-			    | 0;
-  if (getauxval (AT_HWCAP2) & htm_flags)
-    return true;
-#endif
-  return false;
+  return (getauxval (AT_HWCAP2) & PPC_FEATURE2_HAS_HTM) ? true : false;
 }
 
 static inline uint32_t

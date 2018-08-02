@@ -1,5 +1,4 @@
 /* { dg-do compile } */
-/* { dg-skip-if "split DWARF unsupported" { *-*-darwin* } } */
 /* { dg-options "-g -O2 -fno-var-tracking-assignments -gsplit-dwarf" } */
 
 /* This used to fail with location views (implicitly) enabled, because

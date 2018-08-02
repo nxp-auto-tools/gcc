@@ -31,11 +31,7 @@ void
 test01()
 {
   for (const path& p : __gnu_test::test_paths)
-  {
-    std::error_code ec;
-    path abs = absolute(p, ec);
-    VERIFY( ec || abs.is_absolute() );
-  }
+    VERIFY( absolute(p).is_absolute() );
 }
 
 void

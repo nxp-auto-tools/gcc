@@ -317,13 +317,8 @@ matmul_r4_avx (gfc_array_r4 * const restrict retarray,
 	return;
 
       /* Adjust size of t1 to what is needed.  */
-      index_type t1_dim, a_sz;
-      if (aystride == 1)
-        a_sz = rystride;
-      else
-        a_sz = a_dim1;
-
-      t1_dim = a_sz * 256 + b_dim1;
+      index_type t1_dim;
+      t1_dim = (a_dim1 - (ycount > 1)) * 256 + b_dim1;
       if (t1_dim > 65536)
 	t1_dim = 65536;
 
@@ -874,13 +869,8 @@ matmul_r4_avx2 (gfc_array_r4 * const restrict retarray,
 	return;
 
       /* Adjust size of t1 to what is needed.  */
-      index_type t1_dim, a_sz;
-      if (aystride == 1)
-        a_sz = rystride;
-      else
-        a_sz = a_dim1;
-
-      t1_dim = a_sz * 256 + b_dim1;
+      index_type t1_dim;
+      t1_dim = (a_dim1 - (ycount > 1)) * 256 + b_dim1;
       if (t1_dim > 65536)
 	t1_dim = 65536;
 
@@ -1431,13 +1421,8 @@ matmul_r4_avx512f (gfc_array_r4 * const restrict retarray,
 	return;
 
       /* Adjust size of t1 to what is needed.  */
-      index_type t1_dim, a_sz;
-      if (aystride == 1)
-        a_sz = rystride;
-      else
-        a_sz = a_dim1;
-
-      t1_dim = a_sz * 256 + b_dim1;
+      index_type t1_dim;
+      t1_dim = (a_dim1 - (ycount > 1)) * 256 + b_dim1;
       if (t1_dim > 65536)
 	t1_dim = 65536;
 
@@ -2002,13 +1987,8 @@ matmul_r4_vanilla (gfc_array_r4 * const restrict retarray,
 	return;
 
       /* Adjust size of t1 to what is needed.  */
-      index_type t1_dim, a_sz;
-      if (aystride == 1)
-        a_sz = rystride;
-      else
-        a_sz = a_dim1;
-
-      t1_dim = a_sz * 256 + b_dim1;
+      index_type t1_dim;
+      t1_dim = (a_dim1 - (ycount > 1)) * 256 + b_dim1;
       if (t1_dim > 65536)
 	t1_dim = 65536;
 
@@ -2633,13 +2613,8 @@ matmul_r4 (gfc_array_r4 * const restrict retarray,
 	return;
 
       /* Adjust size of t1 to what is needed.  */
-      index_type t1_dim, a_sz;
-      if (aystride == 1)
-        a_sz = rystride;
-      else
-        a_sz = a_dim1;
-
-      t1_dim = a_sz * 256 + b_dim1;
+      index_type t1_dim;
+      t1_dim = (a_dim1 - (ycount > 1)) * 256 + b_dim1;
       if (t1_dim > 65536)
 	t1_dim = 65536;
 

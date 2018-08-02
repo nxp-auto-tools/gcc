@@ -4022,7 +4022,7 @@ build_vec_init (tree base, tree maxindex, tree init,
   tree compound_stmt;
   int destroy_temps;
   tree try_block = NULL_TREE;
-  HOST_WIDE_INT num_initialized_elts = 0;
+  int num_initialized_elts = 0;
   bool is_global;
   tree obase = base;
   bool xvalue = false;
@@ -4457,13 +4457,10 @@ build_vec_init (tree base, tree maxindex, tree init,
 
 	  if (e)
 	    {
-	      HOST_WIDE_INT last = tree_to_shwi (maxindex);
-	      if (num_initialized_elts <= last)
+	      int max = tree_to_shwi (maxindex)+1;
+	      for (; num_initialized_elts < max; ++num_initialized_elts)
 		{
 		  tree field = size_int (num_initialized_elts);
-		  if (num_initialized_elts != last)
-		    field = build2 (RANGE_EXPR, sizetype, field,
-				    size_int (last));
 		  CONSTRUCTOR_APPEND_ELT (const_vec, field, e);
 		}
 	    }

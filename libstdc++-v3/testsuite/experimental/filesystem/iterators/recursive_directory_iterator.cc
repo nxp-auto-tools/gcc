@@ -176,9 +176,6 @@ test05()
   static_assert( noexcept(begin(it)), "begin is noexcept" );
   VERIFY( end(it) == endit );
   static_assert( noexcept(end(it)), "end is noexcept" );
-
-  std::error_code ec;
-  remove_all(p, ec);
 }
 
 int

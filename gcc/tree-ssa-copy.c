@@ -155,7 +155,7 @@ set_copy_of_val (tree var, tree val)
   copy_of[ver].value = val;
 
   if (old != val
-      && (!old || !operand_equal_p (old, val, 0)))
+      || (val && !operand_equal_p (old, val, 0)))
     return true;
 
   return false;

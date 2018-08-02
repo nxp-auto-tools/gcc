@@ -1963,11 +1963,14 @@ pre_expr_reaches_here_p (basic_block occr_bb, struct gcse_expr *expr, basic_bloc
   return rval;
 }
 
-/* Generate RTL to copy an EXP to REG and return it.  */
+/* Generate RTL to copy an EXPR to its `reaching_reg' and return it.  */
 
-rtx_insn *
-prepare_copy_insn (rtx reg, rtx exp)
+static rtx_insn *
+process_insert_insn (struct gcse_expr *expr)
 {
+  rtx reg = expr->reaching_reg;
+  /* Copy the expression to make sure we don't have any sharing issues.  */
+  rtx exp = copy_rtx (expr->expr);
   rtx_insn *pat;
 
   start_sequence ();
@@ -1991,18 +1994,6 @@ prepare_copy_insn (rtx reg, rtx exp)
   end_sequence ();
 
   return pat;
-}
-
-/* Generate RTL to copy an EXPR to its `reaching_reg' and return it.  */
-
-static rtx_insn *
-process_insert_insn (struct gcse_expr *expr)
-{
-  rtx reg = expr->reaching_reg;
-  /* Copy the expression to make sure we don't have any sharing issues.  */
-  rtx exp = copy_rtx (expr->expr);
-
-  return prepare_copy_insn (reg, exp);
 }
 
 /* Add EXPR to the end of basic block BB.

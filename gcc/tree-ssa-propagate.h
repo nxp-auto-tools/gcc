@@ -94,7 +94,9 @@ class ssa_propagation_engine
  private:
   /* Internal implementation details.  */
   void simulate_stmt (gimple *stmt);
+  void process_ssa_edge_worklist (void);
   void simulate_block (basic_block);
+
 };
 
 class substitute_and_fold_engine

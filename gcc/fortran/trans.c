@@ -407,12 +407,7 @@ gfc_build_array_ref (tree base, tree offset, tree decl, tree vptr)
   if (vptr)
     span = gfc_vptr_size_get (vptr);
   else if (decl)
-    {
-      if (TREE_CODE (decl) == COMPONENT_REF)
-	span = gfc_conv_descriptor_span_get (decl);
-      else
-	span = get_array_span (type, decl);
-    }
+    span = get_array_span (type, decl);
 
   /* If a non-null span has been generated reference the element with
      pointer arithmetic.  */

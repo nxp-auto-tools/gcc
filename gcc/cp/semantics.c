@@ -1461,11 +1461,11 @@ finish_compound_stmt (tree stmt)
 /* Finish an asm-statement, whose components are a STRING, some
    OUTPUT_OPERANDS, some INPUT_OPERANDS, some CLOBBERS and some
    LABELS.  Also note whether the asm-statement should be
-   considered volatile, and whether it is asm inline.  */
+   considered volatile.  */
 
 tree
 finish_asm_stmt (int volatile_p, tree string, tree output_operands,
-		 tree input_operands, tree clobbers, tree labels, bool inline_p)
+		 tree input_operands, tree clobbers, tree labels)
 {
   tree r;
   tree t;
@@ -1619,7 +1619,6 @@ finish_asm_stmt (int volatile_p, tree string, tree output_operands,
 		  output_operands, input_operands,
 		  clobbers, labels);
   ASM_VOLATILE_P (r) = volatile_p || noutputs == 0;
-  ASM_INLINE_P (r) = inline_p;
   r = maybe_cleanup_point_expr_void (r);
   return add_stmt (r);
 }
@@ -2705,14 +2704,13 @@ finish_unary_op_expr (location_t op_loc, enum tree_code code, cp_expr expr,
   /* TODO: build_x_unary_op doesn't always honor the location.  */
   result.set_location (combined_loc);
 
-  if (result == error_mark_node)
-    return result;
+  tree result_ovl, expr_ovl;
 
   if (!(complain & tf_warning))
     return result;
 
-  tree result_ovl = result;
-  tree expr_ovl = expr;
+  result_ovl = result;
+  expr_ovl = expr;
 
   if (!processing_template_decl)
     expr_ovl = cp_fully_fold (expr_ovl);
@@ -3415,9 +3413,10 @@ process_outer_var_ref (tree decl, tsubst_flags_t complain, bool odr_use)
     }
 
   /* In a lambda within a template, wait until instantiation
-     time to implicitly capture a dependent type.  */
+     time to implicitly capture.  */
   if (context == containing_function
-      && dependent_type_p (TREE_TYPE (decl)))
+      && DECL_TEMPLATE_INFO (containing_function)
+      && uses_template_parms (DECL_TI_ARGS (containing_function)))
     return decl;
 
   if (lambda_expr && VAR_P (decl)
@@ -3784,10 +3783,9 @@ finish_id_expression (tree id_expression,
 	    return error_mark_node;
 
 	  if (!template_arg_p
-	      && (TREE_CODE (first_fn) == USING_DECL
-		  || (TREE_CODE (first_fn) == FUNCTION_DECL
-		      && DECL_FUNCTION_MEMBER_P (first_fn)
-		      && !shared_member_p (decl))))
+	      && TREE_CODE (first_fn) == FUNCTION_DECL
+	      && DECL_FUNCTION_MEMBER_P (first_fn)
+	      && !shared_member_p (decl))
 	    {
 	      /* A set of member functions.  */
 	      decl = maybe_dummy_object (DECL_CONTEXT (first_fn), 0);
@@ -8518,13 +8516,10 @@ finish_omp_cancel (tree clauses)
   tree ifc = omp_find_clause (clauses, OMP_CLAUSE_IF);
   if (ifc != NULL_TREE)
     {
-      if (!processing_template_decl)
-	ifc = maybe_convert_cond (OMP_CLAUSE_IF_EXPR (ifc));
-      else
-	ifc = build_x_binary_op (OMP_CLAUSE_LOCATION (ifc), NE_EXPR,
-				 OMP_CLAUSE_IF_EXPR (ifc), ERROR_MARK,
-				 integer_zero_node, ERROR_MARK,
-				 NULL, tf_warning_or_error);
+      tree type = TREE_TYPE (OMP_CLAUSE_IF_EXPR (ifc));
+      ifc = fold_build2_loc (OMP_CLAUSE_LOCATION (ifc), NE_EXPR,
+			     boolean_type_node, OMP_CLAUSE_IF_EXPR (ifc),
+			     build_zero_cst (type));
     }
   else
     ifc = boolean_true_node;

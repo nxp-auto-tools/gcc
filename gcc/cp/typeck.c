@@ -2421,13 +2421,7 @@ build_class_member_access_expr (cp_expr object, tree member,
   {
     tree temp = unary_complex_lvalue (ADDR_EXPR, object);
     if (temp)
-      {
-	temp = cp_build_fold_indirect_ref (temp);
-	if (xvalue_p (object) && !xvalue_p (temp))
-	  /* Preserve xvalue kind.  */
-	  temp = move (temp);
-	object = temp;
-      }
+      object = cp_build_fold_indirect_ref (temp);
   }
 
   /* In [expr.ref], there is an explicit list of the valid choices for
@@ -2794,12 +2788,7 @@ finish_class_member_access_expr (cp_expr object, tree name, bool template_p,
 	     expression is dependent.  */
 	  || (TREE_CODE (name) == SCOPE_REF
 	      && TYPE_P (TREE_OPERAND (name, 0))
-	      && dependent_scope_p (TREE_OPERAND (name, 0)))
-	  /* If NAME is operator T where "T" is dependent, we can't
-	     lookup until we instantiate the T.  */
-	  || (TREE_CODE (name) == IDENTIFIER_NODE
-	      && IDENTIFIER_CONV_OP_P (name)
-	      && dependent_type_p (TREE_TYPE (name))))
+	      && dependent_scope_p (TREE_OPERAND (name, 0))))
 	{
 	dependent:
 	  return build_min_nt_loc (UNKNOWN_LOCATION, COMPONENT_REF,
@@ -4837,7 +4826,7 @@ cp_build_binary_op (location_t location,
 	      tree pfn0, delta0, e1, e2;
 
 	      if (TREE_SIDE_EFFECTS (op0))
-		op0 = cp_save_expr (op0);
+		op0 = save_expr (op0);
 
 	      pfn0 = pfn_from_ptrmemfunc (op0);
 	      delta0 = delta_from_ptrmemfunc (op0);
@@ -5119,7 +5108,6 @@ cp_build_binary_op (location_t location,
 	}
 
       if ((code0 == POINTER_TYPE || code1 == POINTER_TYPE)
-	  && !processing_template_decl
 	  && sanitize_flags_p (SANITIZE_POINTER_COMPARE))
 	{
 	  op0 = save_expr (op0);
@@ -5532,8 +5520,7 @@ pointer_diff (location_t loc, tree op0, tree op1, tree ptrtype,
   else
     inttype = restype;
 
-  if (!processing_template_decl
-      && sanitize_flags_p (SANITIZE_POINTER_SUBTRACT))
+  if (sanitize_flags_p (SANITIZE_POINTER_SUBTRACT))
     {
       op0 = save_expr (op0);
       op1 = save_expr (op1);
@@ -9080,22 +9067,6 @@ maybe_warn_about_returning_address_of_local (tree retval)
       && !(TREE_STATIC (whats_returned)
 	   || TREE_PUBLIC (whats_returned)))
     {
-      if (VAR_P (whats_returned)
-	  && DECL_DECOMPOSITION_P (whats_returned)
-	  && DECL_DECOMP_BASE (whats_returned)
-	  && DECL_HAS_VALUE_EXPR_P (whats_returned))
-	{
-	  /* When returning address of a structured binding, if the structured
-	     binding is not a reference, continue normally, if it is a
-	     reference, recurse on the initializer of the structured
-	     binding.  */
-	  tree base = DECL_DECOMP_BASE (whats_returned);
-	  if (TREE_CODE (TREE_TYPE (base)) == REFERENCE_TYPE)
-	    {
-	      tree init = DECL_INITIAL (base);
-	      return maybe_warn_about_returning_address_of_local (init);
-	    }
-	}
       if (TREE_CODE (valtype) == REFERENCE_TYPE)
 	warning_at (DECL_SOURCE_LOCATION (whats_returned),
 		    OPT_Wreturn_local_addr,

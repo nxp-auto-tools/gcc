@@ -55,7 +55,7 @@ void debug_optab_libfuncs (void);
 
 /* Add a REG_EQUAL note to the last insn in INSNS.  TARGET is being set to
    the result of operation CODE applied to OP0 (and OP1 if it is a binary
-   operation).  OP0_MODE is OP0's mode.
+   operation).
 
    If the last insn does not set TARGET, don't do anything, but return 1.
 
@@ -64,8 +64,7 @@ void debug_optab_libfuncs (void);
    try again, ensuring that TARGET is not one of the operands.  */
 
 static int
-add_equal_note (rtx_insn *insns, rtx target, enum rtx_code code, rtx op0,
-		rtx op1, machine_mode op0_mode)
+add_equal_note (rtx_insn *insns, rtx target, enum rtx_code code, rtx op0, rtx op1)
 {
   rtx_insn *last_insn;
   rtx set;
@@ -137,16 +136,16 @@ add_equal_note (rtx_insn *insns, rtx target, enum rtx_code code, rtx op0,
       case POPCOUNT:
       case PARITY:
       case BSWAP:
-	if (op0_mode != VOIDmode && GET_MODE (target) != op0_mode)
+	if (GET_MODE (op0) != VOIDmode && GET_MODE (target) != GET_MODE (op0))
 	  {
-	    note = gen_rtx_fmt_e (code, op0_mode, copy_rtx (op0));
-	    if (GET_MODE_UNIT_SIZE (op0_mode)
+	    note = gen_rtx_fmt_e (code, GET_MODE (op0), copy_rtx (op0));
+	    if (GET_MODE_UNIT_SIZE (GET_MODE (op0))
 		> GET_MODE_UNIT_SIZE (GET_MODE (target)))
 	      note = simplify_gen_unary (TRUNCATE, GET_MODE (target),
-					 note, op0_mode);
+					 note, GET_MODE (op0));
 	    else
 	      note = simplify_gen_unary (ZERO_EXTEND, GET_MODE (target),
-					 note, op0_mode);
+					 note, GET_MODE (op0));
 	    break;
 	  }
 	/* FALLTHRU */
@@ -1096,7 +1095,7 @@ expand_binop_directly (enum insn_code icode, machine_mode mode, optab binoptab,
       if (INSN_P (pat) && NEXT_INSN (pat) != NULL_RTX
 	  && ! add_equal_note (pat, ops[0].value,
 			       optab_to_code (binoptab),
-			       ops[1].value, ops[2].value, mode0))
+			       ops[1].value, ops[2].value))
 	{
 	  delete_insns_since (last);
 	  return expand_binop (mode, binoptab, op0, op1, NULL_RTX,
@@ -2261,7 +2260,7 @@ expand_doubleword_clz (scalar_int_mode mode, rtx op0, rtx target)
   seq = get_insns ();
   end_sequence ();
 
-  add_equal_note (seq, target, CLZ, xop0, NULL_RTX, mode);
+  add_equal_note (seq, target, CLZ, xop0, 0);
   emit_insn (seq);
   return target;
 
@@ -2303,7 +2302,7 @@ expand_doubleword_popcount (scalar_int_mode mode, rtx op0, rtx target)
   seq = get_insns ();
   end_sequence ();
 
-  add_equal_note (seq, t, POPCOUNT, op0, NULL_RTX, mode);
+  add_equal_note (seq, t, POPCOUNT, op0, 0);
   emit_insn (seq);
   return t;
 }
@@ -2474,7 +2473,7 @@ expand_ctz (scalar_int_mode mode, rtx op0, rtx target)
   seq = get_insns ();
   end_sequence ();
 
-  add_equal_note (seq, temp, CTZ, op0, NULL_RTX, mode);
+  add_equal_note (seq, temp, CTZ, op0, 0);
   emit_insn (seq);
   return temp;
 }
@@ -2552,7 +2551,7 @@ expand_ffs (scalar_int_mode mode, rtx op0, rtx target)
   seq = get_insns ();
   end_sequence ();
 
-  add_equal_note (seq, temp, FFS, op0, NULL_RTX, mode);
+  add_equal_note (seq, temp, FFS, op0, 0);
   emit_insn (seq);
   return temp;
 
@@ -2699,7 +2698,7 @@ expand_unop_direct (machine_mode mode, optab unoptab, rtx op0, rtx target,
 	  if (INSN_P (pat) && NEXT_INSN (pat) != NULL_RTX
 	      && ! add_equal_note (pat, ops[0].value,
 				   optab_to_code (unoptab),
-				   ops[1].value, NULL_RTX, mode))
+				   ops[1].value, NULL_RTX))
 	    {
 	      delete_insns_since (last);
 	      return expand_unop (mode, unoptab, op0, NULL_RTX, unsignedp);
@@ -3551,8 +3550,7 @@ maybe_emit_unop_insn (enum insn_code icode, rtx target, rtx op0,
 
   if (INSN_P (pat) && NEXT_INSN (pat) != NULL_RTX
       && code != UNKNOWN)
-    add_equal_note (pat, ops[0].value, code, ops[1].value, NULL_RTX,
-		    GET_MODE (op0));
+    add_equal_note (pat, ops[0].value, code, ops[1].value, NULL_RTX);
 
   emit_insn (pat);
 
@@ -3876,7 +3874,7 @@ prepare_cmp_insn (rtx x, rtx y, enum rtx_code comparison, rtx size,
 	goto fail;
 
       /* Otherwise call a library function.  */
-      result = emit_block_comp_via_libcall (x, y, size);
+      result = emit_block_comp_via_libcall (XEXP (x, 0), XEXP (y, 0), size);
 
       x = result;
       y = const0_rtx;

@@ -1,4 +1,4 @@
-! { dg-do run }
+! { dg-run run )
 ! PR83560 list-directed formatting of INTEGER is missing plus on output
 ! when output open with SIGN='PLUS'
 character(64) :: astring

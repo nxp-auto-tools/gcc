@@ -44,10 +44,6 @@ Boston, MA 02110-1301, USA.  */
 #define SEEK_SET 0
 #endif
 
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-
 #include "simple-object-common.h"
 
 /* The known object file formats.  */
@@ -330,7 +326,7 @@ simple_object_copy_lto_debug_sections (simple_object_read *sobj,
       return errmsg;
     }
 
-  outfd = open (dest, O_CREAT|O_WRONLY|O_TRUNC|O_BINARY, 00777);
+  outfd = creat (dest, 00777);
   if (outfd == -1)
     {
       *err = errno;

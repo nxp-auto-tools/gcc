@@ -1246,9 +1246,7 @@ done:
 	{
 	  c = gfc_constructor_first (head);
 	  for (; c; c = gfc_constructor_next (c))
-	    if (!gfc_convert_type (c->expr, &ts, 1)
-		&& c->expr->ts.type != BT_UNKNOWN)
-	      return MATCH_ERROR;
+	    gfc_convert_type (c->expr, &ts, 1);
 	}
     }
   else

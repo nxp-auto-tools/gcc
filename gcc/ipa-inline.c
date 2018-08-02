@@ -260,12 +260,6 @@ sanitize_attrs_match_for_inline_p (const_tree caller, const_tree callee)
   if (!caller || !callee)
     return true;
 
-  /* Allow inlining always_inline functions into no_sanitize_address
-     functions.  */
-  if (!sanitize_flags_p (SANITIZE_ADDRESS, caller)
-      && lookup_attribute ("always_inline", DECL_ATTRIBUTES (callee)))
-    return true;
-
   return ((sanitize_flags_p (SANITIZE_ADDRESS, caller)
 	   == sanitize_flags_p (SANITIZE_ADDRESS, callee))
 	  && (sanitize_flags_p (SANITIZE_POINTER_COMPARE, caller)
@@ -1166,7 +1160,7 @@ edge_badness (struct cgraph_edge *edge, bool dump)
 	    overall_growth += 256 * 256 - 256;
 	  denominator *= overall_growth;
         }
-      denominator *= ipa_fn_summaries->get (caller)->self_size + growth;
+      denominator *= inlined_time;
 
       badness = - numerator / denominator;
 

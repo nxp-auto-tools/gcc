@@ -298,7 +298,7 @@ _GLIBCXX_BEGIN_NAMESPACE_CONTAINER
 	_Fwd_list_node_base _M_head;
 
 	_Fwd_list_impl()
-	  noexcept(is_nothrow_default_constructible<_Node_alloc_type>::value)
+	  noexcept( noexcept(_Node_alloc_type()) )
 	: _Node_alloc_type(), _M_head()
 	{ }
 

@@ -286,21 +286,6 @@ struct aux_bb_info
 #define BB_VOP_AT_EXIT(bb) (((struct aux_bb_info *)bb->aux)->vop_at_exit)
 #define BB_DEP_BB(bb) (((struct aux_bb_info *)bb->aux)->dep_bb)
 
-/* Valueization helper querying the VN lattice.  */
-
-static tree
-tail_merge_valueize (tree name)
-{
-  if (TREE_CODE (name) == SSA_NAME
-      && has_VN_INFO (name))
-    {
-      tree tem = VN_INFO (name)->valnum;
-      if (tem != VN_TOP)
-	return tem;
-    }
-  return name;
-}
-
 /* Returns true if the only effect a statement STMT has, is to define locally
    used SSA_NAMEs.  */
 
@@ -316,15 +301,7 @@ stmt_local_def (gimple *stmt)
   if (gimple_vdef (stmt) != NULL_TREE
       || gimple_has_side_effects (stmt)
       || gimple_could_trap_p_1 (stmt, false, false)
-      || gimple_vuse (stmt) != NULL_TREE
-      /* Copied from tree-ssa-ifcombine.c:bb_no_side_effects_p():
-	 const calls don't match any of the above, yet they could
-	 still have some side-effects - they could contain
-	 gimple_could_trap_p statements, like floating point
-	 exceptions or integer division by zero.  See PR70586.
-	 FIXME: perhaps gimple_has_side_effects or gimple_could_trap_p
-	 should handle this.  */
-      || is_gimple_call (stmt))
+      || gimple_vuse (stmt) != NULL_TREE)
     return false;
 
   def_p = SINGLE_SSA_DEF_OPERAND (stmt, SSA_OP_DEF);
@@ -386,7 +363,7 @@ gvn_uses_equal (tree val1, tree val2)
   if (val1 == val2)
     return true;
 
-  if (tail_merge_valueize (val1) != tail_merge_valueize (val2))
+  if (vn_valueize (val1) != vn_valueize (val2))
     return false;
 
   return ((TREE_CODE (val1) == SSA_NAME || CONSTANT_CLASS_P (val1))
@@ -496,7 +473,7 @@ same_succ_hash (const same_succ *e)
       for (i = 0; i < gimple_call_num_args (stmt); i++)
 	{
 	  arg = gimple_call_arg (stmt, i);
-	  arg = tail_merge_valueize (arg);
+	  arg = vn_valueize (arg);
 	  inchash::add_expr (arg, hstate);
 	}
     }
@@ -1162,7 +1139,7 @@ gimple_equal_p (same_succ *same_succ, gimple *s1, gimple *s2)
       if (lhs1 == NULL_TREE || lhs2 == NULL_TREE)
 	return false;
       if (TREE_CODE (lhs1) == SSA_NAME && TREE_CODE (lhs2) == SSA_NAME)
-	return tail_merge_valueize (lhs1) == tail_merge_valueize (lhs2);
+	return vn_valueize (lhs1) == vn_valueize (lhs2);
       return operand_equal_p (lhs1, lhs2, 0);
 
     case GIMPLE_ASSIGN:

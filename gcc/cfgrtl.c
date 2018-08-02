@@ -1264,13 +1264,11 @@ patch_jump_insn (rtx_insn *insn, rtx_insn *old_label, basic_block new_bb)
 
 	  /* If the substitution doesn't succeed, die.  This can happen
 	     if the back end emitted unrecognizable instructions or if
-	     target is exit block on some arches.  Or for crossing
-	     jumps.  */
+	     target is exit block on some arches.  */
 	  if (!redirect_jump (as_a <rtx_jump_insn *> (insn),
 			      block_label (new_bb), 0))
 	    {
-	      gcc_assert (new_bb == EXIT_BLOCK_PTR_FOR_FN (cfun)
-			  || CROSSING_JUMP_P (insn));
+	      gcc_assert (new_bb == EXIT_BLOCK_PTR_FOR_FN (cfun));
 	      return false;
 	    }
 	}
@@ -3317,15 +3315,8 @@ fixup_abnormal_edges (void)
 			 If it's placed after a trapping call (i.e. that
 			 call is the last insn anyway), we have no fallthru
 			 edge.  Simply delete this use and don't try to insert
-			 on the non-existent edge.
-			 Similarly, sometimes a call that can throw is
-			 followed in the source with __builtin_unreachable (),
-			 meaning that there is UB if the call returns rather
-			 than throws.  If there weren't any instructions
-			 following such calls before, supposedly even the ones
-			 we've deleted aren't significant and can be
-			 removed.  */
-		      if (e)
+			 on the non-existent edge.  */
+		      if (GET_CODE (PATTERN (insn)) != USE)
 			{
 			  /* We're not deleting it, we're moving it.  */
 			  insn->set_undeleted ();
@@ -4444,9 +4435,6 @@ cfg_layout_redirect_edge_and_branch (edge e, basic_block dest)
     }
   else
     ret = redirect_branch_edge (e, dest);
-
-  if (!ret)
-    return NULL;
 
   fixup_partition_crossing (ret);
   /* We don't want simplejumps in the insn stream during cfglayout.  */

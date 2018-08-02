@@ -337,12 +337,8 @@ func (b *Builder) gccgoBuildIDELFFile(a *Action) (string, error) {
 	}
 	fmt.Fprintf(&buf, "\n")
 	if cfg.Goos != "solaris" {
-		secType := "@progbits"
-		if cfg.Goarch == "arm" {
-			secType = "%progbits"
-		}
-		fmt.Fprintf(&buf, "\t"+`.section .note.GNU-stack,"",%s`+"\n", secType)
-		fmt.Fprintf(&buf, "\t"+`.section .note.GNU-split-stack,"",%s`+"\n", secType)
+		fmt.Fprintf(&buf, "\t"+`.section .note.GNU-stack,"",@progbits`+"\n")
+		fmt.Fprintf(&buf, "\t"+`.section .note.GNU-split-stack,"",@progbits`+"\n")
 	}
 
 	if cfg.BuildN || cfg.BuildX {

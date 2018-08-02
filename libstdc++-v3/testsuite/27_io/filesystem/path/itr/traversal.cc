@@ -104,7 +104,7 @@ test02()
 void
 test03()
 {
-  path paths[] = { "single", "multiple/elements", "trailing/slash/", "/." };
+  path paths[] = { "single", "multiple/elements" };
   for (const path& p : paths)
     for (auto iter = p.begin(); iter != p.end(); ++iter)
     {
