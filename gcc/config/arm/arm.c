@@ -13642,6 +13642,17 @@ ldm_stm_operation_p (rtx op, bool load, machine_mode mode,
   return true;
 }
 
+/* Return true if a 64-bit access with alignment ALIGN and with a
+   constant offset OFFSET from the base pointer is permitted on this
+   architecture.  */
+static bool
+align_ok_ldrd_strd (HOST_WIDE_INT align, HOST_WIDE_INT offset)
+{
+  return (unaligned_access
+	  ? (align >= BITS_PER_WORD && (offset & 3) == 0)
+	  : (align >= 2 * BITS_PER_WORD && (offset & 7) == 0));
+}
+
 /* Return true iff it would be profitable to turn a sequence of NOPS loads
    or stores (depending on IS_STORE) into a load-multiple or store-multiple
    instruction.  ADD_OFFSET is nonzero if the base address register needs
@@ -13867,6 +13878,10 @@ load_multiple_sequence (rtx *operands, int nops, int *regs, int *saved_order,
 			     check_regs ? unsorted_regs : NULL))
     return 0;
 
+  if (!align_ok_ldrd_strd (MEM_ALIGN(operands[order[0]]),
+			   unsorted_regs[order[0]]))
+    return 0;
+
   if (saved_order)
     memcpy (saved_order, order, sizeof order);
 
@@ -14014,6 +14029,10 @@ store_multiple_sequence (rtx *operands, int nops, int nops_total,
      check that the register numbers are ascending.  */
   if (!compute_offset_order (nops, unsorted_offsets, order,
 			     check_regs ? unsorted_regs : NULL))
+    return 0;
+
+  if (!align_ok_ldrd_strd (MEM_ALIGN(operands[order[0]]),
+			   unsorted_regs[order[0]]))
     return 0;
 
   if (saved_order)
@@ -16149,17 +16168,6 @@ operands_ok_ldrd_strd (rtx rt, rtx rt2, rtx rn, HOST_WIDE_INT offset,
     return false;
 
   return true;
-}
-
-/* Return true if a 64-bit access with alignment ALIGN and with a
-   constant offset OFFSET from the base pointer is permitted on this
-   architecture.  */
-static bool
-align_ok_ldrd_strd (HOST_WIDE_INT align, HOST_WIDE_INT offset)
-{
-  return (unaligned_access
-	  ? (align >= BITS_PER_WORD && (offset & 3) == 0)
-	  : (align >= 2 * BITS_PER_WORD && (offset & 7) == 0));
 }
 
 /* Helper for gen_operands_ldrd_strd.  Returns true iff the memory
