@@ -3049,6 +3049,10 @@ ftree-scev-cprop
 Common Var(flag_tree_scev_cprop) Init(1) Optimization
 Enable copy propagation of scalar-evolution information.
 
+fmetric-vect
+Common Var(flag_metric_vect)
+Specify vect metric.
+
 ; -fverbose-asm causes extra commentary information to be produced in
 ; the generated assembly code (to make it more readable).  This option
 ; is generally only of use to those who actually need to read the

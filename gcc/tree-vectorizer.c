@@ -1278,6 +1278,24 @@ vectorize_loops (void)
 	  }
       }
 
+  if (flag_metric_vect)
+    {
+      const char *src_filename
+	= LOCATION_FILE (DECL_SOURCE_LOCATION (cfun->decl));
+      gcc_assert (src_filename != NULL);
+      char *vect_metric_filename
+	= (char *) xmalloc (strlen (src_filename) + strlen(".vect") + 1);
+      strcpy (vect_metric_filename, src_filename);
+      strcat (vect_metric_filename, ".vect");
+      FILE *vect_metric_fp = fopen (vect_metric_filename, "a");
+      gcc_assert (vect_metric_fp != NULL);
+
+      fprintf (vect_metric_fp, "%s,%d\n",
+	       IDENTIFIER_POINTER (DECL_NAME (cfun->decl)),
+	       num_vectorized_loops);
+      fclose (vect_metric_fp);
+    }
+
   for (i = 1; i < number_of_loops (cfun); i++)
     {
       loop_vec_info loop_vinfo;
