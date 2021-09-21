@@ -1254,8 +1254,9 @@ vectorize_loops (void)
   if (dump_enabled_p ()
       || (num_vectorized_loops > 0 && dump_enabled_p ()))
     dump_printf_loc (MSG_NOTE, vect_location,
-                     "vectorized %u loops in function.\n",
-                     num_vectorized_loops);
+		     "**vectorized %u loops in function %s.\n",
+		     num_vectorized_loops,
+		     cgraph_node::get_create (cfun->decl)->asm_name ());
 
   /*  ----------- Finalize. -----------  */
 
